@@ -33,7 +33,9 @@ get_data_by_ROI <- function(ROI_num, ROIs, Analysis, data_file, Summary, train_n
   Summary[(ROI_num + 1), 2] <- ROI
 
   if (Analysis == "CV" | Analysis == "Group") {
-    Headers <- c(IPC_names, paste(IPC_names, "-?", sep = ""), "Recon-?", "St.Err", "T", "p", "Adj.r", "f", "df1", "df2", "Branches")
+    left_out_cols <- seq(1, Hold)
+    Headers <- c(IPC_names, paste(IPC_names, "-?", sep = ""), "Recon-?", "St.Err", "T", "p", "Adj.r", "f", "df1", "df2", "Branches",
+                 paste("LO", left_out_cols, sep = ""))
     CV_Log <- matrix(0, nrow = (repetitions + 1), ncol = length(Headers))
     colnames(CV_Log) <- Headers
   } else if (Analysis == "Mixed") {
@@ -60,7 +62,7 @@ get_data_by_ROI <- function(ROI_num, ROIs, Analysis, data_file, Summary, train_n
   # update Summary table
   if (Analysis == "CV") {
     for (cols in 1:(2 * length(ROIs) + 9)) {
-      Summary[(ROI_num), (cols + 2)] <- mean(as.numeric(CV_Log[1:(repetitions), (cols)]))
+      Summary[(ROI_num + 1), (cols + 2)] <- mean(as.numeric(CV_Log[1:(repetitions + 1), (cols)]))
     }
     write.table(CV_Log, file.path(output_path, paste(ROI, Analysis, "_", DataType, "_log.csv", sep = "")),
       row.names = FALSE, sep = ","
@@ -217,6 +219,7 @@ run_BIC <- function(mci, num_IPC, IPC_names, train_n, test_n, num_Comparisons, R
         num_chains <- output_list[[7]]
         ThisPath <- output_list[[8]]
         BestBic <- output_list[[9]]
+        Chain_Header <- output_list[[10]]
       }
     }
 
@@ -233,7 +236,8 @@ run_BIC <- function(mci, num_IPC, IPC_names, train_n, test_n, num_Comparisons, R
     # Check levels
     num_chains <- check_levels(
       checking_levels, BICS_Output1, Prior_Best_IPCs, Do_Check, Level_Paths, num_IPC, IPC_names, IPC_prior_level,
-      ROI_Train, trainIPCs, Lv_list, DataType2, model_improved, num_chains, All_Paths, ThisPath, BestBic, output_path
+      ROI_Train, trainIPCs, Lv_list, DataType2, model_improved, num_chains, All_Paths, ThisPath, BestBic, output_path,
+      Chain_Header, ROI, Analysis
     )
 
     # reset level to final IPCs

@@ -36,6 +36,7 @@ compare_IPC <- function(i, num_IPC, CurrentLevel, IPC_names, Best1, ROI_Train, D
   check <- i - 1
   BestPath <- matrix(0, nrow = 1, ncol = num_IPC)
   ThisPath <- matrix(0, nrow = 1, ncol = num_IPC)
+  Chain_Header <- c(IPC_names, "Best")
 
   # Initialize BestBic value in case it's not defined
   BestBic <- 0
@@ -52,7 +53,6 @@ compare_IPC <- function(i, num_IPC, CurrentLevel, IPC_names, Best1, ROI_Train, D
     # write bic table
     if (Analysis == "Group") {
       BIC_Chain <- matrix(, nrow = 12, ncol = (num_IPC + 1))
-      Chain_Header <- c(IPC_names, "Best")
       for (heads in 1:(num_IPC + 1)) {
         BIC_Chain[1, heads] <- Chain_Header[heads]
         BIC_Chain[2:12, heads] <- BICS_Output1[1:11, heads]
@@ -66,7 +66,7 @@ compare_IPC <- function(i, num_IPC, CurrentLevel, IPC_names, Best1, ROI_Train, D
     # leave BIC level loop
     loop_end <- 1
   }
-  return(list(loop_end, Lv_list, test_Lv_list, BICS_Output1, Best1, All_Paths, num_chains, ThisPath, BestBic))
+  return(list(loop_end, Lv_list, test_Lv_list, BICS_Output1, Best1, All_Paths, num_chains, ThisPath, BestBic, Chain_Header))
 }
 
 #' Runs the loop that checks whether additional paths are needed to find the best IPC fit. This function is run in a loop
@@ -76,7 +76,8 @@ compare_IPC <- function(i, num_IPC, CurrentLevel, IPC_names, Best1, ROI_Train, D
 #' to stimulus representations in that ROI).
 #' @export
 check_levels <- function(checking_levels, BICS_Output1, Prior_Best_IPCs, Do_Check, Level_Paths, num_IPC, IPC_names, IPC_prior_level,
-                         ROI_Train, trainIPCs, Lv_list, DataType2, model_improved, num_chains, All_Paths, ThisPath, BestBic, output_path) {
+                         ROI_Train, trainIPCs, Lv_list, DataType2, model_improved, num_chains, All_Paths, ThisPath, BestBic, output_path,
+                         Chain_Header, ROI, Analysis) {
   for (checking_level in checking_levels) {
     # begin checking
     BICS_Output_alternate <- matrix(0, nrow = num_IPC, ncol = (num_IPC + 1))
@@ -95,7 +96,7 @@ check_levels <- function(checking_levels, BICS_Output1, Prior_Best_IPCs, Do_Chec
       checking_level, Level2Check, Splits, BICS_Output1, BICS_Output_alternate, Prior_Best_IPCs,
       Do_Check, Level_Paths, num_IPC, IPC_names, IPC_prior_level,
       ROI_Train, trainIPCs, Lv_list, DataType2, model_improved, num_chains, All_Paths, ThisPath,
-      BestBic, output_path
+      BestBic, output_path, Chain_Header, ROI, Analysis
     )
     model_improved <- follow_paths_output[[1]]
     num_chains <- follow_paths_output[[2]]
@@ -120,7 +121,7 @@ check_levels <- function(checking_levels, BICS_Output1, Prior_Best_IPCs, Do_Chec
 follow_paths <- function(checking_level, Level2Check, Splits, BICS_Output1, BICS_Output_alternate, Prior_Best_IPCs,
                          Do_Check, Level_Paths, num_IPC, IPC_names, IPC_prior_level,
                          ROI_Train, trainIPCs, Lv_list, DataType2, model_improved, num_chains, All_Paths, ThisPath,
-                         BestBic, output_path) {
+                         BestBic, output_path, Chain_Header, ROI, Analysis) {
   # begin specific level check
   # check if additional paths needed, and fill a list of each
   Level2Check[Level2Check[(num_IPC + 1)]] <- Level2Check[Level2Check[(num_IPC + 1)]] + 2

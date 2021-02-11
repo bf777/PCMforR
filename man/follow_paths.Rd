@@ -25,7 +25,10 @@ follow_paths(
   All_Paths,
   ThisPath,
   BestBic,
-  output_path
+  output_path,
+  Chain_Header,
+  ROI,
+  Analysis
 )
 }
 \value{
