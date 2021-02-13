@@ -43,8 +43,7 @@ Dr. Rebecca Todd (becket.todd\link{at}psych.ubc.ca) at the University of British
 \references{
 If you use this package in your own work, please cite it as follows:
 
-James H. Krylywy, Brandon J. Forys and Rebecca M. Todd (2021). PCMforR: Pattern Component Modelling for R. R
-package version 0.1.0.
+Kryklywy, J.H., Forys, B.J., & Todd, R.M., (2021). Pattern Component Modelling for R (PCMforR), R package, version 0.1.0.
 
 BibTeX:\preformatted{[at]Manual\{,
 title = \{PCMforR: Pattern Component Modelling for R\},
