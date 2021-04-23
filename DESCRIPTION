@@ -24,7 +24,8 @@ Description: This package allows you to easily conduct a Pattern
     Pattern Components, or IPCs - by which data might be represented in a given 
     brain region - and compare these structures to your data to determine which
     hypothesis best fits your data using a Bayesian Information Criterion (BIC)
-    metric. For more details on PCM analysis, see Kryklywy, Ehlers, Beukers, et al., 2020.
+    metric. For any additional question on functionality and use, please contact: 
+    j.kryklywy[at]psych.ubc.ca
 License: MIT
 Encoding: UTF-8
 LazyData: true

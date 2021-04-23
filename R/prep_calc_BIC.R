@@ -1,11 +1,3 @@
-# prep_calc_BIC
-#' A series of functions for extracting data for each ROI and conducting a Bayesian Information Criterion (BIC)
-#' analysis on data from each ROI.
-
-#' Extracts data for each ROI, then runs Bayesian Information Criterion (BIC) analyses and returns a summary table. This
-#' function is run in a loop by `run_PCM()` for each ROI.
-#' @returns A Summary matrix, containing summary information on the best-matching IPCSs for output to the final data file.
-#' @export
 get_data_by_ROI <- function(ROI_num, ROIs, Analysis, data_file, Summary, train_n, test_n,
                             data_name, repetitions, num_IPC, num_Comparisons, testIPCs, trainIPCs, SampleSize, input_path,
                             output_path) {
@@ -102,15 +94,6 @@ get_data_by_ROI <- function(ROI_num, ROIs, Analysis, data_file, Summary, train_n
   return(Summary)
 }
 
-#' Returns Bayesian Information Criterion (BIC) information comparing participant data for that ROI to the input IPCs,
-#' in order to determine which IPCs best fit the data. This function is run in a loop by `get_data_by_ROI()`.
-#' @return A list of outputs containing information about the IPC fits in the dataset, as follows:
-#' * `Summary`: A summary table of the BIC outputs, to be used in the output tables.
-#' * `Best_Output`: The IPC that best fits the data, according to BIC.
-#' * `All_Paths`: A list of the paths that were searched in order to find the IPC that best fits the data.
-#' * `CV_Log`: If cross-validation was conducted, an output of each iteration of cross-validation in which the IPC that best
-#' fits the data was found.
-#' @export
 run_BIC <- function(mci, num_IPC, IPC_names, train_n, test_n, num_Comparisons, ROI_Data, CV_Log, ROI,
                     testIPCs, trainIPCs, DataType2, Analysis, ROI_num, Summary, SampleSize, output_path) {
   BICS_Output1 <- matrix(0, nrow = num_IPC, ncol = (num_IPC + 1))

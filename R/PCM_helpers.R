@@ -1,10 +1,3 @@
-# PCM_helpers
-#' A set of small functions for restructuring data and running linear models.
-
-#' Restructures IPCs into column-wise form for easier use in comparisons.
-#' @returns A list of two lists, the first containing the restructured test IPCs and the second containing
-#' the restructured train IPCs, ready to be used elsewhere in the analysis.
-#' @export
 assign_IPCs <- function(num_IPC, IPC_names, All_IPCs, test_n, train_n, testIPCs, trainIPCs, num_Comparisons) {
   # Initialize empty lists for the output
   testIPCs_list <- vector(mode = "list", length = num_IPC)
@@ -22,10 +15,6 @@ assign_IPCs <- function(num_IPC, IPC_names, All_IPCs, test_n, train_n, testIPCs,
   return(list(testIPCs_list, trainIPCs_list))
 }
 
-#' Calculates the Bayesian Information Criterion of a multiple regression analysis
-#' predicting the participant data for a given ROI from the input IPCs.
-#' @return The Bayesian Information Criterion value (calculated using `BIC()`) for the regression, as a float.
-#' @export
 run_ipc_lm <- function(IPC, ROI_Train, Lv_list) {
   IPC_df <- data.frame(ROI_Train = unlist(ROI_Train), IPC = unlist(IPC))
   IPC_df_colnames <- c("ROI_Train", "IPC")
@@ -38,10 +27,6 @@ run_ipc_lm <- function(IPC, ROI_Train, Lv_list) {
   return(IPC_lm)
 }
 
-#' Conducts a multiple regression analysis on identified scores, predicting the participant
-#' data for a given ROI against the identified IPCs only.
-#' @return An `lm()` object (linear regression output).
-#' @export
 run_ROI_lm <- function(ROI, Lv_list) {
   IPC_df <- data.frame(ROI = unlist(ROI))
   ROI_df_colnames <- c("ROI")
