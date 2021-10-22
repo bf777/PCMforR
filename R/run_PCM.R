@@ -1,75 +1,37 @@
-run_PCM <- function(input_path, output_path, ROIs, IPC_names, IPC_file, IPC_prior_level, DataType, Analysis, SampleSize,
-                    num_Conditions, Condition_names, Hold, cv_iterations = 1000) {
-  # Determine other data characteristics from input
-  num_Comparisons <- sum(1:num_Conditions)
-  num_IPC <- length(IPC_names)
+# run_PCM
+#' A function that accepts input to run a Pattern Component Modelling analysis of Representational Similarity
+#' Analysis (RSA) data.
 
-  # Dataset size defaults
-  if (Analysis == "Group") {
-    repetitions <- 1
-    train_n <- SampleSize
-    test_n <- SampleSize
-  } else if (Analysis == "Mixed") {
-    repetitions <- SampleSize
-    train_n <- SampleSize
-    test_n <- 1
-  } else if (Analysis == "Individual") {
-    repetitions <- SampleSize
-    train_n <- 1
-    test_n <- 1
-  } else if (Analysis == "CV") {
-    repetitions <- cv_iterations
-    train_n <- (SampleSize - Hold)
-    test_n <- Hold
-  }
+#' Accepts input information about the structure of your data.
+#' @param input_dir A string to the folder containing an input file with a name defined in `POI_file`, as well
+#' as RSA data files for each *region of interest (ROI)* (which must be structured in the form `[sample size x number of comparisons]`).
+#' @param output_dir A string to the folder where you would like all outputs to be written.
+#' @param POI_file A string defining the path to a CSV file containing one row for each  *patterns of interest (POI)* which you want
+#' to fit to your data, and one column for each comparison made, indicating the pattern of expected correlations for that POI. The first column
+#' of this file should be the names of the POIs.  See (Kryklywy, Ehlers, Beukers, et al., 2020) for a discussion of the setup of -
+#' and rationale behind - POIs.
+#' @param analysis_type Possible values:  `'one_sample'`, `'two_sample'`, `'individual'`, `'cross_val'`. A string indicating the
+#' type of analysis that you would like to carry out on the data.
+#' - `one_sample`: Train a model on one sample and test it on the same sample.
+#' - `two_sample`: Train a model on one sample and test it on a different sample.
+#' - `individual`: Train a model on one sample and test it on one or more individuals' data.
+#' - `cross_val`: Cross-validation - iteratively train a model on one sample and test it on a held-out sample.
+#' @param holdout (default = 2) If `analysis_type` is `cross_val`, is an integer defining the number of values in your data to hold out on each iteration.
+#' @param num_iters (default = 1000) If `analysis_type` is `cross_val`, is an integer defining the number CV iterations to run.
+#' @returns a summary of PCM data indicating the POIs that best fit the data.
+#' @export
+run_PCM <- function(input_dir, output_dir, POI_file, analysis_type, holdout = 2, num_iters = 1000) {
+  # 1. Read in data from each file in input path
+  input_files <- grepl(list.files(input_dir), '*_vert.csv')
+  data_inputs <- lapply(input_files, process_inputs, analysis_type)
+  # Extract a list of data for all ROIs
+  data_to_use <- data_inputs[1]
+  # Extract ROI names
+  ROIs <- data_inputs[2]
 
-  # Set data log defaults
-  data_file <- c("")
-  data_name <- c("PCM")
-
-  # Import IPCs and size them appropriately
-  All_IPCs <- read.table(file.path(input_path, IPC_file), header = FALSE, sep = ",")
-  testIPCs <- unlist(list(matrix(, nrow = 1, ncol = num_Comparisons * test_n)))
-  trainIPCs <- unlist(list(matrix(, nrow = 1, ncol = num_Comparisons * train_n)))
-
-  IPC_list <- seq(1, num_IPC)
-
-  # Restructure IPCs into column-wise form for easier comparison
-  IPCs_types_list <- assign_IPCs(num_IPC, IPC_names, All_IPCs, test_n, train_n, testIPCs, trainIPCs, num_Comparisons)
-  testIPCs <- IPCs_types_list[[1]]
-  trainIPCs <- IPCs_types_list[[2]]
-
-  # Prepare master summary
-  if (Analysis == "Mixed") {
-    Summary_Headers <- c(
-      "Analysis", "ROI", IPC_names, paste("g", IPC_names, "-?", sep = ""),
-      "Recon-?", "St.Err", "T", "p", "Adj.r", "f", "df1", "df2", paste("i", IPC_names, "-?", sep = "")
-    )
-    Summary <- matrix(, nrow = (length(ROIs) + 1), ncol = (3 * length(ROIs) + 9))
-  } else {
-    Summary_Headers <- c(
-      "Analysis", "ROI", IPC_names, paste(IPC_names, "-?", sep = ""),
-      "Recon-?", "St.Err", "T", "p", "Adj.r", "f", "df1", "df2", "Branches"
-    )
-    Summary <- matrix(, nrow = (length(ROIs) + 1), ncol = length(Summary_Headers))
-  }
-  colnames(Summary) <- Summary_Headers
-  ROI_nums <- seq(1, length(ROIs))
-
-  # Conduct PCMs for each ROI
-  Summary_output <- lapply(
-    ROI_nums, get_data_by_ROI, ROIs, Analysis, data_file, Summary, train_n, test_n, data_name,
-    repetitions, num_IPC, num_Comparisons, testIPCs, trainIPCs, SampleSize, input_path, output_path
-  )
-  for (summary_row in 1:length(ROIs)) {
-    Summary[summary_row, 1:length(Summary_Headers)] <- Summary_output[[summary_row]][summary_row + 1, 1:length(Summary_Headers)]
-  }
-  Summary <- Summary[1:length(ROIs), 1:length(Summary_Headers)]
-
-  # Finally, output summary table
-  write.table(Summary, file.path(
-    output_path,
-    paste(Analysis, "_", DataType, "_summary.csv", sep = "")
-  ), row.names = FALSE, sep = ",")
-  print(paste("PCM complete! It was run on", SampleSize, "participants in", length(ROIs) ,"ROIs. You can view the outputs in the output folder:", output_path))
+  # 2.Loop through iterations of training and testing
+  # 2.1. Split data
+  # split_data.R
+  # 2.2. Calculate and update BIC scores
+  # calc_BIC.R
 }
