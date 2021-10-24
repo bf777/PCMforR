@@ -28,10 +28,32 @@ run_PCM <- function(input_dir, output_dir, POI_file, analysis_type, holdout = 2,
   data_to_use <- data_inputs[1]
   # Extract ROI names
   ROIs <- data_inputs[2]
+  # Get POIs
+  POI_df <- read.csv(POI_file)
+  POI_names <- POI_df[1]
+  POIs <- POI_df[2:ncol(POI_df)]
 
   # 2.Loop through iterations of training and testing
-  # 2.1. Split data
-  # split_data.R
-  # 2.2. Calculate and update BIC scores
-  # calc_BIC.R
+  # train_test_loop.R
+  # Calculate sample size from number of rows in first data input file
+  sample_size <- length(data.frame(data_to_use[1])[1])
+  if (analysis_type == 'one_sample' | analysis_type == 'two_sample') {
+    num_iters <- 1
+  } else if (analysis_type == 'individual') {
+    num_iters <- sample_size
+  }
+  # Set up repeats in data
+  data_to_use_repeated <- rep(data_to_use, num_iters)
+  ROIs_repeated <- rep(ROIs, num_iters)
+  POI_names_repeated <- rep(POI_names, num_iters)
+  POIs_repeated <- rep(POIs, num_iters)
+  analysis_type_repeated <- rep(analysis_type, num_iters)
+  holdout_repeated <- rep(holdout, num_iters)
+  # else if (analysis_type == 'cross_val'), num_iters = number of iterations specified in num_iters (default = 1000)
+  train_test_loop_outputs <- mapply(train_test_loop, data_to_use_repeated, ROIs_repeated, POI_names_repeated, POIs_repeated,
+                                    analysis_type_repeated, holdout_repeated)
+    # 2.1. Split data
+    # split_data.R
+    # 2.2. Calculate and update BIC scores
+    # calc_BIC.R
 }
