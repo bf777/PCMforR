@@ -22,10 +22,10 @@ train_test_loop <- function(input_filename, ROI, POI_name, POIs, analysis_type, 
   test_data <- split_data_outputs[2]
 
   # Initialize horizontal and vertical level indices
-  horiz_level <- 0
-  vert_level <- 0
+  horiz_level <- 1
+  vert_level <- 1
 
   # Train the model at the current level by finding combination of paths with lowest BIC
   # run_BIC_at_level.R
-  best_POIs_BICs <- lapply()
+  best_POIs_BICs <- lapply(train_data, run_BIC_at_level, POIs, horiz_level, vert_level)
 }
