@@ -13,7 +13,7 @@
 #' - `cross_val`: Cross-validation - iteratively train a model on one sample and test it on a held-out sample.
 #' @param holdout (default = 2) If `analysis_type` is `cross_val`, is an integer defining the number of values in your data to hold out on each iteration.
 #' @param num_iters (default = 1000) If `analysis_type` is `cross_val`, is an integer defining the number CV iterations to run.
-train_test_loop <- function(input_filename, ROI, POI_name, POIs, analysis_type, holdout) {
+train_test_loop <- function(input_filename, ROI, POI_names, POIs, analysis_type, holdout) {
   # Split data into train and test
   split_data_outputs <- split_data(input_filename, analysis_type, holdout)
 
@@ -25,7 +25,13 @@ train_test_loop <- function(input_filename, ROI, POI_name, POIs, analysis_type, 
   horiz_level <- 1
   vert_level <- 1
 
+  # Initialize POIs dataframe for lm
+  POI_placeholder <- rep(data.frame(matrix(1, nrow = nrow(POIs[[1]]),
+                                           ncol = ncol(POIs[[1]]))), length(POIs))
+  POIs_df <- data.frame(POI_placeholder)
+  colnames(POIs_df) <- POI_names
+
   # Train the model at the current level by finding combination of paths with lowest BIC
   # run_BIC_at_level.R
-  best_POIs_BICs <- lapply(train_data, run_BIC_at_level, POIs, horiz_level, vert_level)
+  best_POIs_BICs <- lapply(train_data, run_BIC_at_level, POI_names, POIs, POIs_df, horiz_level, vert_level)
 }
