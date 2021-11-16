@@ -45,18 +45,18 @@ run_PCM <- function(input_dir, output_dir, POI_file, analysis_type, holdout = 2,
   # Initialize list of best BICs
   best_BICs <- vector()
 
-  # Set up repeats in data
-  data_to_use_repeated <- rep(data_to_use, num_iters)
-  ROIs_repeated <- rep(ROIs, num_iters)
-  POI_names_repeated <- rep(POI_names, num_iters)
-  POIs_repeated <- rep(POIs, num_iters)
-  analysis_type_repeated <- rep(analysis_type, num_iters)
-  holdout_repeated <- rep(holdout, num_iters)
-  best_BICs_repeated <- rep(best_BICs. num_iters)
+  # Initialize dataframe of identified POIs
+  POIs_found_df <- data.frame(matrix(0, nrow = num_iters,
+                                     ncol = length(POIs)))
 
   # else if (analysis_type == 'cross_val'), num_iters = number of iterations specified in num_iters (default = 1000)
-  train_test_loop_outputs <- mapply(train_test_loop, data_to_use_repeated, ROIs_repeated, POI_names_repeated, POIs_repeated,
-                                    analysis_type_repeated, holdout_repeated, best_BICs_repeated)
+  for (iter in num_iters) {
+    train_test_loop_output_at_iter <- train_test_loop(data_to_use, ROIs,
+                                                      POI_names, POIs,
+                                                      analysis_type, holdout,
+                                                      best_BICs, output_dir)
+  }
+
     # 2.1. Split data
     # split_data.R
     # 2.2. Calculate and update BIC scores
