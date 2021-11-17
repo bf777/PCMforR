@@ -37,6 +37,9 @@ run_BIC_at_level <- function(train_data, POIs_list, POI_names, POIs_to_use, anal
   # Initialize list of BIC logs for each vertical level
   BIC_log_list <- vector()
 
+  # Initialize list of horizontal levels for each vertical level
+  horiz_level_list <- vector()
+
   # Initialize min_BIC at -1
   min_BIC <- -1
 
@@ -55,63 +58,65 @@ run_BIC_at_level <- function(train_data, POIs_list, POI_names, POIs_to_use, anal
     best_BICs <- c(best_BICs, min_BIC)
     min_BIC_idx <- match(min_BIC, BICs)
 
-    # horiz_level is current vertical level in BIC_log
-    horiz_level <- unlist(BIC_log[vert_level_idx,])
+    # horiz_level is list of equivalent BIC scores at horizontal level
+    horiz_level <- vector()
 
-    # If BIC improved vs. previous, save index of min BIC to current horiz_level
-    if (length(best_BICs) > 1) {
-    if (min_BIC < best_BICs[length(best_BICs) - 1]) {
+    # If BIC improved vs. criterion, check if BIC is better than other BICS +/- 2
+    criterion <- 2
+    if (abs(min_BIC - BICs) > criterion) {
+     #  if (min_BIC < best_BICs[length(best_BICs) - 1]) {
+        # If best BIC already found in horizontal level, check if it's the same
+        # horizontal level
+      if (length(horiz_level) > 0) {
+        if (min_BIC_idx %in% horiz_level) {
+          # If at same horizontal level, record index of best BIC
+          BIC_log[vert_level_idx, length(POIs_list) + 1] <- min_BIC_idx
+          vert_level_idx <- vert_level_idx + 1
+          horiz_level_list <- c(horiz_level_list, horiz_level)
 
-      # If best BIC already found in horizontal level, check if it's the same
-      # horizontal level
-      if (min_BIC_idx %in% horiz_level) {
-        # If at same horizontal level, record index of best BIC
-        BIC_log[vert_level_idx, length(POIs_list) + 1] <- min_BIC_idx
-        vert_level_idx <- vert_level_idx + 1
-
-        # add POI with new best BIC to POIs_to_use so that it can be included in
-        # next level of BIC
-        POIs_to_use[min_BIC_idx] <- POI_names[min_BIC_idx]
-
-        # Continue at next vertical level
-      } else {
+          # add POI with new best BIC to POIs_to_use so that it can be included in
+          # next level of BIC
+          POIs_to_use[min_BIC_idx] <- POI_names[min_BIC_idx]
+          # Continue at next vertical level
+        }
+      }
         # If not, continue directly to next vertical level and save current BIC
         # log table
         vert_level_idx <- vert_level_idx + 1
         BIC_log_list <- c(BIC_log_list, BIC_log)
-      }
+        }
     } else {
-      # If BIC not improved vs previous:
-
-      # TODO: add extra BIC check/path recording
+      # If BIC not improved vs criterion:
+      # Check if min BIC < best BIC
+      if (min_BIC < best_BICs[length(best_BICs) - 1]) {
+        best_BIC <- min_BIC
+      }
 
       # Check if horizontal level is empty, so long as we're not on the first
       # vertical level
-      while (vert_level_idx != 1) {
-        if (length(vert_levels[vert_level_idx]) == 0) {
-          } else {
-            # If not, check horizontal level at previous vertical level
-            vert_level_idx <- vert_level_idx - 1
-          }
+      while (length(horiz_level_list[vert_level_idx]) == 0) {
+        if (vert_level_idx == 1) {
+          # If on first vertical level, continue to testing
+          break
+        } else {
+          # If not, check horizontal level at previous vertical level
+          vert_level_idx <- vert_level_idx - 1
         }
+        }
+      }
       # If the horizontal level at the current vertical level is not empty,
       # continue BIC
-      horiz_level_idx <- horiz_level_idx + 1
-      break
-    }
-    }
-  }
 
-  # If BIC not improved vs. previous and empty level found, finish training
+      # If BIC not improved vs. previous and empty level found, finish training
 
-  # Weight POIs_list
-  # lm(train_data ~ POIs_df[best_BICs])
+      # Weight POIs_list
+      # lm(train_data ~ POIs_df[best_BICs])
 
 
-  # Export BIC logs
-  data_logger(BIC_log_list, 'BIC_log', analysis_type, ROI, output_dir)
+      # Export BIC logs
+      data_logger(BIC_log_list, 'BIC_log', analysis_type, ROI, output_dir)
 
-  # Continue to testing
+      # Continue to testing
   }
 
 calc_lm_BIC <- function(POI, POIs_to_use, train_data) {
