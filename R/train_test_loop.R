@@ -16,7 +16,7 @@
 train_test_loop <- function(data_for_ROI, ROI, POI_names, POIs_list, analysis_type,
                             holdout, best_BICs, output_dir) {
 
-  noquote(paste('ROI:', ROI))
+  print(paste('ROI:', ROI), quote = FALSE)
 
   # Split data into train and test
   split_data_outputs <- split_data(data_for_ROI, analysis_type, holdout)
@@ -30,6 +30,6 @@ train_test_loop <- function(data_for_ROI, ROI, POI_names, POIs_list, analysis_ty
 
   # Train the model at the current level by finding combination of paths with lowest BIC
   # run_BIC_at_level.R
-  best_POIs_BICs_at_iter <- lapply(train_data, run_BIC_at_level, POIs_list, POI_names,
-                                   POIs_to_use, analysis_type, ROI, output_dir)
+  weighted_POIs_at_iter <- lapply(train_data, run_BIC_at_level, POIs_list, POI_names,
+                                  POIs_to_use, analysis_type, ROI, output_dir)
 }
