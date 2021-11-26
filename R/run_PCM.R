@@ -50,9 +50,6 @@ run_PCM <- function(input_dir, output_dir, POI_file, analysis_type, holdout = 2,
   } else if (analysis_type == 'individual') {
     num_iters <- sample_size
   }
-  # Initialize list of best BICs
-  best_BICs <- vector()
-
   # Initialize dataframe of identified POIs
   POIs_found_df <- data.frame(matrix(0, nrow = num_iters,
                                      ncol = length(POI_names)))
@@ -75,7 +72,7 @@ run_PCM <- function(input_dir, output_dir, POI_file, analysis_type, holdout = 2,
       train_test_loop_output_at_iter <- train_test_loop(data_for_ROI, ROI,
                                                         POI_names, POIs_list,
                                                         analysis_type, holdout,
-                                                        best_BICs, output_dir)
+                                                        output_dir, iter)
     }
   }
 

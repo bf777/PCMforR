@@ -16,8 +16,9 @@
 #' `'individual'`, `'cross_val'`. A string indicating the type of analysis that
 #' you would like to carry out on the data.
 #' @param ROI The name of the current *region of interest (ROI)* within which to run the model.
+#' @param iter The current iteration (relevant for multi-iteration analyses such as cross-validation and individual analyses).
 run_BIC_at_level <- function(train_data, POIs_list, POI_names, POIs_to_use, analysis_type,
-                             ROI, output_dir) {
+                             ROI, output_dir, iter) {
 
   # Unlist train_data for lm
   train_data <- unlist(train_data)
@@ -66,7 +67,6 @@ run_BIC_at_level <- function(train_data, POIs_list, POI_names, POIs_to_use, anal
     BIC_log[vert_level_idx, 1:length(POIs_list)] <- BICs
     POIs_to_use <- c(POIs_to_use, POI_names[min_BIC_idx])
     BIC_log[vert_level_idx, length(POIs_list) + 1] <- min_BIC_idx
-    BIC_log_list <- c(BIC_log_list, BIC_log)
 
     # If BIC improved vs. previous best BIC more than criterion, check if BIC is better than other BICS +/- 2
 
@@ -125,7 +125,30 @@ run_BIC_at_level <- function(train_data, POIs_list, POI_names, POIs_to_use, anal
   POIs_to_add_weighting <- paste(POIs_to_use, collapse = " + ")
   formula_to_use_weighting <- paste0('train_data ~ ', POIs_to_add_weighting)
   POI_weights_lm <- lm(as.formula(formula_to_use_weighting))
+
+  # Get betas
   POI_weights <- summary(POI_weights_lm)$coefficients[,1]
+
+  # Get overall R^2
+  POI_R_squared <- summary(POI_weights_lm)$adj.r.squared
+
+  # Get F statistic (df1, df2, f)
+  POI_F_stats <- summary(POI_weights_lm)$f[1:3]
+
+  # If we're doing individual or cross-validation, record POI_weights, POI_R_squared, POI_F_stats for iteration
+  if (analysis_type == 'cross_val') {
+    # Column 1: ROI
+    CV_log[iter, 1] <- ROI
+
+    # Column 2: analysis type
+    CV_log[iter, 2] <- analysis_type
+
+    # CV_log[iter, 3:lemgth(POI_names)] <- identified_POIs
+
+    CV_log[iter, length(POI_names) + 2:(2 * (length(POI_names) + 2))] <- POI_weights
+
+
+  }
 
   weighted_POIs_list <- vector()
 
@@ -137,11 +160,11 @@ run_BIC_at_level <- function(train_data, POIs_list, POI_names, POIs_to_use, anal
       weighted_POIs_list <- c(weighted_POIs_list, POI_to_weight)
     }
   }
-  print(weighted_POIs_list)
 
   # Export BIC logs
   # print(data.frame(BIC_log_list))
-  # data_logger(BIC_log_list, 'BIC_log', analysis_type, ROI, output_dir)
+  data_logger(BIC_log, 'BIC_log', analysis_type, ROI, output_dir)
+
 
   # Continue to testing
   # return(weighted_POIs_list)

@@ -10,7 +10,7 @@ run_BIC_at_level(
   train_data,
   POIs_list,
   POI_names,
-  POIs_df,
+  POIs_to_use,
   analysis_type,
   ROI,
   output_dir
@@ -26,7 +26,7 @@ to fit to your data, with the shape \verb{[sample size x number of comparisons]}
 \item{POI_names}{The names of the \emph{patterns of interest (POI)} which you want
 to fit to your data.}
 
-\item{POIs_df}{A dataframe containing each previously identified POI for use
+\item{POIs_to_use}{A dataframe containing each previously identified POI for use
 in the BIC calculations.}
 
 \item{analysis_type}{Possible values:  \code{'one_sample'}, \code{'two_sample'},

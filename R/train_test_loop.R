@@ -11,10 +11,12 @@
 #' - `two_sample`: Train a model on one sample and test it on a different sample.
 #' - `individual`: Train a model on one sample and test it on one or more individuals' data.
 #' - `cross_val`: Cross-validation - iteratively train a model on one sample and test it on a held-out sample.
-#' @param holdout (default = 2) If `analysis_type` is `cross_val`, is an integer defining the number of values in your data to hold out on each iteration.
-#' @param num_iters (default = 1000) If `analysis_type` is `cross_val`, is an integer defining the number CV iterations to run.
+#' @param holdout (default = 2) If `analysis_type` is `cross_val`, is an integer defining the number of values
+#' in your data to hold out on each iteration.
+#' @param output_dir A string to the folder where you would like all outputs to be written.
+#' @param iter The current iteration (relevant for multi-iteration analyses such as cross-validation and individual analyses).
 train_test_loop <- function(data_for_ROI, ROI, POI_names, POIs_list, analysis_type,
-                            holdout, best_BICs, output_dir) {
+                            holdout, output_dir, iter) {
 
   print(paste('ROI:', ROI), quote = FALSE)
 
@@ -31,5 +33,5 @@ train_test_loop <- function(data_for_ROI, ROI, POI_names, POIs_list, analysis_ty
   # Train the model at the current level by finding combination of paths with lowest BIC
   # run_BIC_at_level.R
   weighted_POIs_at_iter <- lapply(train_data, run_BIC_at_level, POIs_list, POI_names,
-                                  POIs_to_use, analysis_type, ROI, output_dir)
+                                  POIs_to_use, analysis_type, ROI, output_dir, iter)
 }

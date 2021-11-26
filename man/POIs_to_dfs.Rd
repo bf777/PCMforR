@@ -5,7 +5,7 @@
 \title{A function that takes individual rows of a dataframe defining all POIs and
 converts it into its own dataframe for comparison to input data.}
 \usage{
-POIs_to_dfs(POI_row)
+POIs_to_dfs(POI_row, sample_size)
 }
 \description{
 A function that takes individual rows of a dataframe defining all POIs and

@@ -8,7 +8,7 @@ train_test_loop(
   data_for_ROI,
   ROI,
   POI_names,
-  POIs,
+  POIs_list,
   analysis_type,
   holdout,
   best_BICs,

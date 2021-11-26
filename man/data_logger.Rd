@@ -4,15 +4,12 @@
 \alias{data_logger}
 \title{A function that handles recording of data output}
 \usage{
-data_logger(input_data, data_type, POIs_df, analysis_type, ROI, output_dir)
+data_logger(input_data, data_type, analysis_type, ROI, output_dir)
 }
 \arguments{
 \item{input_data}{The data to be recorded to a .csv file.}
 
 \item{data_type}{The type of data to be recorded.}
-
-\item{POIs_df}{A dataframe containing each previously identified POI for use
-in the BIC calculations.}
 
 \item{analysis_type}{Possible values:  \code{'one_sample'}, \code{'two_sample'},
 \code{'individual'}, \code{'cross_val'}. A string indicating the type of analysis that

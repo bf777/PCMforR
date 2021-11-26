@@ -13,17 +13,18 @@ data_logger <- function(input_data, data_type, analysis_type, ROI, output_dir) {
   # Interim logging of BIC scores to .csv (if not doing cross-validation)
   if (data_type == 'BIC_log' & analysis_type != 'cross_val') {
     # Record BICs for each level
-    for (BIC_log_idx in seq(1, length(input_data))) {
-    write.csv(input_data[BIC_log_idx], file.path(output_dir,
-                                                 paste('BIC_log_level_', BIC_log_idx,
-                                                       '_ROI_', ROI,
-                                                       '_analysis_', analysis_type,
-                                                       '.csv', sep = '')))
-    }
+    # for (BIC_log_idx in seq(1, length(input_data))) {
+    # write.csv(input_data[BIC_log_idx], file.path(output_dir,
+    #                                              paste('BIC_log_level_', BIC_log_idx,
+    #                                                    '_ROI_', ROI,
+    #                                                    '_analysis_', analysis_type,
+    #                                                    '.csv', sep = '')))
+    # }
     # Best BICs
-    write.csv(input_data[length(input_data)], file.path(output_dir,
-                                                        paste('BIC_log_ROI_', ROI,
-                                                              '_analysis_', analysis_type,
-                                                              '.csv', sep = '')))
+    write.csv(input_data, file.path(output_dir, paste('BIC_log_ROI_', ROI,
+                                                      '_analysis_', analysis_type,
+                                                      '.csv', sep = '')))
+  } else if (data_type == 'summary') {
+    # Record summary data
   }
 }
