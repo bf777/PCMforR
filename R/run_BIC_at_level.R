@@ -16,9 +16,10 @@
 #' `'individual'`, `'cross_val'`. A string indicating the type of analysis that
 #' you would like to carry out on the data.
 #' @param ROI The name of the current *region of interest (ROI)* within which to run the model.
+#' @param held_out_idx If `analysis_type` is `cross_val`,indicates the held-out values for this iteration.
 #' @param iter The current iteration (relevant for multi-iteration analyses such as cross-validation and individual analyses).
 run_BIC_at_level <- function(train_data, POIs_list, POI_names, POIs_to_use, analysis_type,
-                             ROI, output_dir, iter) {
+                             ROI, output_dir, held_out_idx, CV_log, iter) {
 
   # Unlist train_data for lm
   train_data <- unlist(train_data)
@@ -48,7 +49,7 @@ run_BIC_at_level <- function(train_data, POIs_list, POI_names, POIs_to_use, anal
   min_BIC <- -1
 
   while(vert_level_idx < max_vert_level) {
-    print(paste('Checking level', vert_level_idx), quote = FALSE)
+    # print(paste('Checking level', vert_level_idx), quote = FALSE)
 
     # Calculate all BIC scores at level
     BICs <- unlist(lapply(POI_names, calc_lm_BIC, POIs_to_use, train_data))
@@ -128,6 +129,11 @@ run_BIC_at_level <- function(train_data, POIs_list, POI_names, POIs_to_use, anal
 
   # Get betas
   POI_weights <- summary(POI_weights_lm)$coefficients[,1]
+  POI_weights_for_log <- rep(0, length(POI_names))
+  POI_weights_for_log[match(unique(POIs_to_use), POI_names)] <- POI_weights
+
+  # Get overall coefficient (intercept)
+  POI_overall_fit <- summary(POI_weights_lm)$coefficients[1,1]
 
   # Get overall R^2
   POI_R_squared <- summary(POI_weights_lm)$adj.r.squared
@@ -143,11 +149,24 @@ run_BIC_at_level <- function(train_data, POIs_list, POI_names, POIs_to_use, anal
     # Column 2: analysis type
     CV_log[iter, 2] <- analysis_type
 
-    # CV_log[iter, 3:lemgth(POI_names)] <- identified_POIs
+    # Identified POIs
+    identified_POIs <- rep(0, length(POI_names))
+    identified_POIs[match(unique(POIs_to_use), POI_names)] <- 1
+    CV_log[iter, 3:length(POI_names)] <- identified_POIs
 
-    CV_log[iter, length(POI_names) + 2:(2 * (length(POI_names) + 2))] <- POI_weights
+    # POI weights
+    CV_log[iter, (length(POI_names) + 3):(2 * (length(POI_names)) + 2)] <- POI_weights_for_log
 
+    # Overall fit
+    CV_log[iter, (2 * (length(POI_names)) + 2) + 1] <- POI_overall_fit
 
+    # Overall R^2
+    CV_log[iter, (2 * (length(POI_names)) + 2) + 5] <- POI_R_squared
+
+    # F statistics
+    CV_log[iter, ((2 * (length(POI_names)) + 2) + 6):((2 * (length(POI_names)) + 2) + 8)] <- POI_F_stats
+
+    data_logger(CV_log, 'CV_log', analysis_type, ROI, output_dir)
   }
 
   weighted_POIs_list <- vector()
@@ -162,17 +181,14 @@ run_BIC_at_level <- function(train_data, POIs_list, POI_names, POIs_to_use, anal
   }
 
   # Export BIC logs
-  # print(data.frame(BIC_log_list))
   data_logger(BIC_log, 'BIC_log', analysis_type, ROI, output_dir)
 
-
   # Continue to testing
-  # return(weighted_POIs_list)
+  return(list(weighted_POIs_list, CV_log))
 }
 
 calc_lm_BIC <- function(POI, POIs_to_use, train_data) {
   # set up lm with train data ~ current POI + all identified POIs
-  # POIs_to_add <- sapply(POIs_to_use, paste, collapse = " + ")
 
   # If more than one POI has been identified, add identified POIs to lm
   if (length(POIs_to_use) != 0) {

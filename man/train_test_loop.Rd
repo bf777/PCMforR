@@ -11,8 +11,9 @@ train_test_loop(
   POIs_list,
   analysis_type,
   holdout,
-  best_BICs,
-  output_dir
+  output_dir,
+  CV_log,
+  iter
 )
 }
 \arguments{
@@ -27,13 +28,16 @@ type of analysis that you would like to carry out on the data.
 \item \code{cross_val}: Cross-validation - iteratively train a model on one sample and test it on a held-out sample.
 }}
 
-\item{holdout}{(default = 2) If \code{analysis_type} is \code{cross_val}, is an integer defining the number of values in your data to hold out on each iteration.}
+\item{holdout}{(default = 2) If \code{analysis_type} is \code{cross_val}, is an integer defining the number of values
+in your data to hold out on each iteration.}
+
+\item{output_dir}{A string to the folder where you would like all outputs to be written.}
+
+\item{iter}{The current iteration (relevant for multi-iteration analyses such as cross-validation and individual analyses).}
 
 \item{input_filename}{A file containing \emph{representational similarity analysis (RSA)} data for a given \emph{region of interest (ROI)},
 in the form \verb{[sample size x number of comparisons]}. This file's name should be of the format \code{ROI_vert.csv}, where \code{ROI} is the
 name of a brain region from which the data was obtained (e.g. \code{ACC}).}
-
-\item{num_iters}{(default = 1000) If \code{analysis_type} is \code{cross_val}, is an integer defining the number CV iterations to run.}
 }
 \description{
 A function that handles each iteration of training and testing a PCM model.

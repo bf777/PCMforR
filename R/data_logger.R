@@ -24,6 +24,11 @@ data_logger <- function(input_data, data_type, analysis_type, ROI, output_dir) {
     write.csv(input_data, file.path(output_dir, paste('BIC_log_ROI_', ROI,
                                                       '_analysis_', analysis_type,
                                                       '.csv', sep = '')))
+  } else if (data_type == 'CV_log') {
+    # Record CV log
+    write.csv(input_data, file.path(output_dir, paste('CV_log_ROI_', ROI,
+                                                      '_analysis_', analysis_type,
+                                                      '.csv', sep = '')))
   } else if (data_type == 'summary') {
     # Record summary data
   }

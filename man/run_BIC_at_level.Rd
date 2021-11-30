@@ -13,7 +13,10 @@ run_BIC_at_level(
   POIs_to_use,
   analysis_type,
   ROI,
-  output_dir
+  output_dir,
+  held_out_idx,
+  CV_log,
+  iter
 )
 }
 \arguments{
@@ -34,6 +37,10 @@ in the BIC calculations.}
 you would like to carry out on the data.}
 
 \item{ROI}{The name of the current \emph{region of interest (ROI)} within which to run the model.}
+
+\item{held_out_idx}{If \code{analysis_type} is \code{cross_val},indicates the held-out values for this iteration.}
+
+\item{iter}{The current iteration (relevant for multi-iteration analyses such as cross-validation and individual analyses).}
 }
 \description{
 A function that calculates and stores a \emph{Bayesian Information Criterion (BIC)}

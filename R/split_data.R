@@ -25,10 +25,13 @@ split_data <- function(data_for_ROI, analysis_type, holdout) {
 
   # If analysis_type == 'cross_val', randomly sample from the data according to the holdout size
   # If analysis_type == 'individual', use one row as data for testing
+
+  data_for_ROI <- data_for_ROI[[1]]
+
   if (analysis_type == 'cross_val') {
-    held_out_idx <- sample.int(nrows(data_for_ROI), size = holdout)
-    train_data <- data_for_ROI[-(held_out_idx)]
-    test_data <- data_for_ROI[held_out_idx]
+    held_out_idx <- sample.int(nrow(data_for_ROI), size = holdout)
+    train_data <- data_for_ROI[-held_out_idx,]
+    test_data <- data_for_ROI[held_out_idx,]
   } else if (analysis_type == 'individual') {
     held_out_idx <- 0
     train_data <- data_for_ROI
@@ -38,5 +41,5 @@ split_data <- function(data_for_ROI, analysis_type, holdout) {
     train_data <- data_for_ROI
     test_data <- data_for_ROI
   }
-  return(c(train_data, test_data))
+  return(list(train_data, test_data, held_out_idx))
 }

@@ -57,22 +57,30 @@ run_PCM <- function(input_dir, output_dir, POI_file, analysis_type, holdout = 2,
   # Convert each row of POIs into its own dataframe for lm
   POIs_list <- apply(POIs, 1, POIs_to_dfs, sample_size)
 
-  # Create variable for each POI
-  for (i in seq_along(POIs_list)) {
-    data_for_POI <- unlist(POIs_list[i])
-    POI_name <- POI_names[i]
-    assign(POI_name, data_for_POI, envir = .GlobalEnv)
-  }
+  print(paste('Analysis type:', analysis_type), quote = FALSE)
 
   # else if (analysis_type == 'cross_val'), num_iters = number of iterations specified in num_iters (default = 1000)
   for (i in seq_along(data_to_use)) {
     data_for_ROI <- data_to_use[i]
     ROI <- ROIs[i]
-    for (iter in num_iters) {
+    print(paste('ROI:', ROI), quote = FALSE)
+
+    # Initialize CV log (will remain blank if not using analysis_type = `cross_val`)
+    CV_log <- data.frame(matrix(0, nrow = num_iters,
+                                ncol = (length(POIs_list) * 2) + 11 + holdout))
+    colnames(CV_log) <- c('ROI', 'analysis_type', POI_names,
+                          paste(POI_names, '-?', sep = ''),
+                          'Recon-?', 'St.Err', 't', 'p', 'Adj.r', 'F', 'df1',
+                          'df2', 'Branches', paste(rep('HO_', holdout),
+                                                   seq(1, holdout),
+                                                   sep = ''))
+
+    for (iter in seq(1, num_iters)) {
       train_test_loop_output_at_iter <- train_test_loop(data_for_ROI, ROI,
                                                         POI_names, POIs_list,
                                                         analysis_type, holdout,
-                                                        output_dir, iter)
+                                                        output_dir, CV_log, iter)
+      CV_log <- train_test_loop_output_at_iter[[2]]
     }
   }
 

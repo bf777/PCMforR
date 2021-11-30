@@ -16,22 +16,38 @@
 #' @param output_dir A string to the folder where you would like all outputs to be written.
 #' @param iter The current iteration (relevant for multi-iteration analyses such as cross-validation and individual analyses).
 train_test_loop <- function(data_for_ROI, ROI, POI_names, POIs_list, analysis_type,
-                            holdout, output_dir, iter) {
-
-  print(paste('ROI:', ROI), quote = FALSE)
+                            holdout, output_dir, CV_log, iter) {
+  print(paste('iter:', iter), quote = FALSE)
 
   # Split data into train and test
   split_data_outputs <- split_data(data_for_ROI, analysis_type, holdout)
 
   # Get split train and test data
-  train_data <- split_data_outputs[1]
-  test_data <- split_data_outputs[2]
+  train_data <- split_data_outputs[[1]]
+  test_data <- split_data_outputs[[2]]
+  held_out_idx <- split_data_outputs[[3]]
+
+  # If `analysis_type` == `cross_val`, apply holdout to all POI data as well
+  # Create variable for each POI
+  for (i in seq_along(POIs_list)) {
+    data_for_POI <- POIs_list[i][[1]]
+    POI_name <- POI_names[i]
+    if (analysis_type == 'cross_val') {
+      data_for_POI_train <- data.frame(data_for_POI[-held_out_idx,])
+      data_for_POI_train <- unlist(data_for_POI_train)
+      assign(POI_name, data_for_POI_train, envir = .GlobalEnv)
+    } else {
+      data_for_POI <- unlist(data.frame(data_for_POI))
+      assign(POI_name, data_for_POI, envir = .GlobalEnv)
+    }
+  }
 
   # Initialize POIs placeholder dataframe for lm
   POIs_to_use <- vector()
 
   # Train the model at the current level by finding combination of paths with lowest BIC
   # run_BIC_at_level.R
-  weighted_POIs_at_iter <- lapply(train_data, run_BIC_at_level, POIs_list, POI_names,
-                                  POIs_to_use, analysis_type, ROI, output_dir, iter)
+  weighted_POIs_at_iter <- run_BIC_at_level(train_data, POIs_list, POI_names,
+                                            POIs_to_use, analysis_type, ROI,
+                                            output_dir, held_out_idx, CV_log, iter)
 }
