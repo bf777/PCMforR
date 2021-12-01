@@ -49,7 +49,9 @@ run_BIC_at_level <- function(train_data, POIs_list, POI_names, POIs_to_use, anal
   min_BIC <- -1
 
   while(vert_level_idx < max_vert_level) {
-    # print(paste('Checking level', vert_level_idx), quote = FALSE)
+    if (analysis_type != 'cross_val') {
+      print(paste('Checking level', vert_level_idx), quote = FALSE)
+    }
 
     # Calculate all BIC scores at level
     BICs <- unlist(lapply(POI_names, calc_lm_BIC, POIs_to_use, train_data))
@@ -96,8 +98,10 @@ run_BIC_at_level <- function(train_data, POIs_list, POI_names, POIs_to_use, anal
           # If BIC not improved vs criterion:
           # Check if min BIC < best BIC
           if (min_BIC < previous_min_BIC) {
-            best_BIC <- min_BIC
-        }
+            min_BIC_idx <- match(min_BIC, BICs)
+            print(min_BIC_idx)
+            # BIC_log[vert_level_idx, length(POIs_list) + 1] <- min_BIC_idx
+            }
 
         # Check if horizontal level is empty, so long as we're not on the first
         # vertical level
