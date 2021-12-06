@@ -45,8 +45,15 @@ run_BIC_at_level <- function(train_data, POIs_list, POI_names, POIs_to_use, anal
   # Initialize list of horizontal levels for each vertical level
   horiz_level_list <- vector()
 
+  # Initialize BIC paths dataframe
+  BIC_paths <- data.frame(matrix(NA, nrow = length(POIs_list),
+                                 ncol = length(POIs_list)))
+
   # Initialize min_BIC at -1
   min_BIC <- -1
+
+  # Initialize path number at 1
+  n_path <- 1
 
   while(vert_level_idx < max_vert_level) {
     if (analysis_type != 'cross_val') {
@@ -70,6 +77,7 @@ run_BIC_at_level <- function(train_data, POIs_list, POI_names, POIs_to_use, anal
     BIC_log[vert_level_idx, 1:length(POIs_list)] <- BICs
     POIs_to_use <- c(POIs_to_use, POI_names[min_BIC_idx])
     BIC_log[vert_level_idx, length(POIs_list) + 1] <- min_BIC_idx
+    BIC_paths[horiz_level_idx, vert_level_idx] <- min_BIC_idx
 
     # If BIC improved vs. previous best BIC more than criterion, check if BIC is better than other BICS +/- 2
 
@@ -97,11 +105,11 @@ run_BIC_at_level <- function(train_data, POIs_list, POI_names, POIs_to_use, anal
         } else {
           # If BIC not improved vs criterion:
           # Check if min BIC < best BIC
+          print(min_BIC)
+          print(previous_min_BIC)
           if (min_BIC < previous_min_BIC) {
-            min_BIC_idx <- match(min_BIC, BICs)
-            print(min_BIC_idx)
-            # BIC_log[vert_level_idx, length(POIs_list) + 1] <- min_BIC_idx
-            }
+            data_logger(BIC_log, 'BIC_log', analysis_type, ROI, output_dir, 'best')
+          }
 
         # Check if horizontal level is empty, so long as we're not on the first
         # vertical level
@@ -119,6 +127,10 @@ run_BIC_at_level <- function(train_data, POIs_list, POI_names, POIs_to_use, anal
       # If the horizontal level at the current vertical level is not empty,
       # continue BIC
       horiz_level_idx <- horiz_level_idx + 1
+      n_path <- n_path + 1
+
+      # Export BIC logs for path
+      data_logger(BIC_log, 'BIC_log', analysis_type, ROI, output_dir, n_path)
     }
 
   # If we're on the first level, go to the next level without recording BIC
@@ -170,7 +182,7 @@ run_BIC_at_level <- function(train_data, POIs_list, POI_names, POIs_to_use, anal
     # F statistics
     CV_log[iter, ((2 * (length(POI_names)) + 2) + 6):((2 * (length(POI_names)) + 2) + 8)] <- POI_F_stats
 
-    data_logger(CV_log, 'CV_log', analysis_type, ROI, output_dir)
+    data_logger(CV_log, 'CV_log', analysis_type, ROI, output_dir, n_path)
   }
 
   weighted_POIs_list <- vector()
@@ -184,8 +196,8 @@ run_BIC_at_level <- function(train_data, POIs_list, POI_names, POIs_to_use, anal
     }
   }
 
-  # Export BIC logs
-  data_logger(BIC_log, 'BIC_log', analysis_type, ROI, output_dir)
+  # Export all BIC paths
+  data_logger(BIC_paths, 'BIC_paths', analysis_type, ROI, output_dir, n_path)
 
   # Continue to testing
   return(list(weighted_POIs_list, CV_log))
