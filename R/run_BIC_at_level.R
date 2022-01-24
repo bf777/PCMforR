@@ -83,9 +83,10 @@ run_BIC_at_level <- function(train_data, POIs_list, POI_names, POIs_to_use, anal
 
     # If we're not on the first vertical level (we have a prior BIC to compare to),
     # compare BICs
-    if (vert_level_idx >= 2) {
+    if (vert_level_idx >= 3) {
       criterion <- 2
       previous_min_BIC <- best_BICs[length(best_BICs) - 1]
+      min_BIC_two_back <- best_BICs[length(best_BICs) - 2]
       if (abs(min_BIC - previous_min_BIC) > criterion) {
         # If best BIC already found in horizontal level, check if it's the same
         # horizontal level
@@ -105,10 +106,13 @@ run_BIC_at_level <- function(train_data, POIs_list, POI_names, POIs_to_use, anal
         } else {
           # If BIC not improved vs criterion:
           # Check if min BIC < best BIC
-          print(min_BIC)
-          print(previous_min_BIC)
+          # print(min_BIC)
+          # print(previous_min_BIC)
           if (min_BIC < previous_min_BIC) {
             data_logger(BIC_log, 'BIC_log', analysis_type, ROI, output_dir, 'best')
+          } else if (min_BIC == min_BIC_two_back) {
+            data_logger(BIC_log, 'BIC_log', analysis_type, ROI, output_dir, 'best')
+            break
           }
 
         # Check if horizontal level is empty, so long as we're not on the first
