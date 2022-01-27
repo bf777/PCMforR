@@ -112,6 +112,9 @@ run_BIC_at_level <- function(train_data, POIs_list, POI_names, POIs_to_use, anal
             data_logger(BIC_log, 'BIC_log', analysis_type, ROI, output_dir, 'best')
           } else if (min_BIC == min_BIC_two_back) {
             data_logger(BIC_log, 'BIC_log', analysis_type, ROI, output_dir, 'best')
+
+            # Export all BIC paths
+            data_logger(BIC_paths, 'BIC_paths', analysis_type, ROI, output_dir, n_path)
             break
           }
 
@@ -199,9 +202,6 @@ run_BIC_at_level <- function(train_data, POIs_list, POI_names, POIs_to_use, anal
       weighted_POIs_list <- c(weighted_POIs_list, POI_to_weight)
     }
   }
-
-  # Export all BIC paths
-  data_logger(BIC_paths, 'BIC_paths', analysis_type, ROI, output_dir, n_path)
 
   # Continue to testing
   return(list(weighted_POIs_list, CV_log))

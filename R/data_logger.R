@@ -27,7 +27,7 @@ data_logger <- function(input_data, data_type, analysis_type, ROI, output_dir, n
   } else if (data_type == 'BIC_paths') {
     write.table(input_data, file.path(output_dir, paste('BIC_paths_ROI_', ROI,
                                                       '_analysis_', analysis_type,
-                                                      '.csv', sep = '')), col.names=FALSE)
+                                                      '.csv', sep = '')), row.names = FALSE, col.names=FALSE, sep = ',')
   } else if (data_type == 'CV_log') {
     # Record CV log
     write.csv(input_data, file.path(output_dir, paste('CV_log_ROI_', ROI,
