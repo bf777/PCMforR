@@ -16,13 +16,13 @@ data_logger <- function(input_data, data_type, analysis_type, ROI, output_dir, n
     if(n_path == 'best') {
       write.csv(input_data, file.path(output_dir, paste('BIC_log_ROI_', ROI,
                                                         '_analysis_', analysis_type,
-                                                        '.csv', sep = '')))
+                                                        '.csv', sep = '')), row.names = FALSE)
     } else {
       # BICs for current path
       write.csv(input_data, file.path(output_dir, paste('BIC_log_ROI_', ROI,
                                                         '_analysis_', analysis_type,
                                                         '_path_', n_path,
-                                                        '.csv', sep = '')))
+                                                        '.csv', sep = '')), row.names = FALSE)
     }
   } else if (data_type == 'BIC_paths') {
     write.table(input_data, file.path(output_dir, paste('BIC_paths_ROI_', ROI,

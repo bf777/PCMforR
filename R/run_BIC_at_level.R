@@ -108,9 +108,7 @@ run_BIC_at_level <- function(train_data, POIs_list, POI_names, POIs_to_use, anal
           # Check if min BIC < best BIC
           # print(min_BIC)
           # print(previous_min_BIC)
-          if (min_BIC < previous_min_BIC) {
-            data_logger(BIC_log, 'BIC_log', analysis_type, ROI, output_dir, 'best')
-          } else if (min_BIC == min_BIC_two_back) {
+          if (min_BIC <= previous_min_BIC) {
             data_logger(BIC_log, 'BIC_log', analysis_type, ROI, output_dir, 'best')
 
             # Export all BIC paths
@@ -133,7 +131,7 @@ run_BIC_at_level <- function(train_data, POIs_list, POI_names, POIs_to_use, anal
         }
       # If the horizontal level at the current vertical level is not empty,
       # continue BIC
-      horiz_level_idx <- horiz_level_idx + 1
+      # horiz_level_idx <- horiz_level_idx + 1
       n_path <- n_path + 1
 
       # Export BIC logs for path
