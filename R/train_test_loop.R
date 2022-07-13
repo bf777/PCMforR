@@ -15,9 +15,11 @@
 #' in your data to hold out on each iteration.
 #' @param output_dir A string to the folder where you would like all outputs to be written.
 #' @param iter The current iteration (relevant for multi-iteration analyses such as cross-validation and individual analyses).
-train_test_loop <- function(data_for_ROI, ROI, POI_names, POIs_list, analysis_type,
-                            holdout, output_dir, CV_log, iter) {
+train_test_loop <- function(data_for_ROI, ROI, ROI_idx, POI_names, POIs_list, analysis_type,
+                            holdout, output_dir, CV_log, summary_df, iter) {
   print(paste('iter:', iter), quote = FALSE)
+
+  # TRAINING
 
   # Split data into train and test
   split_data_outputs <- split_data(data_for_ROI, analysis_type, holdout)
@@ -48,6 +50,14 @@ train_test_loop <- function(data_for_ROI, ROI, POI_names, POIs_list, analysis_ty
   # Train the model at the current level by finding combination of paths with lowest BIC
   # run_BIC_at_level.R
   weighted_POIs_at_iter <- run_BIC_at_level(train_data, POIs_list, POI_names,
-                                            POIs_to_use, analysis_type, ROI,
-                                            output_dir, held_out_idx, CV_log, iter)
+                                            POIs_to_use, analysis_type, ROI, ROI_idx,
+                                            output_dir, held_out_idx, CV_log, summary_df, iter)
+
+  # TESTING
+  ROI_reconstruction <- unlist(list(weighted_POIs_at_iter[[3]]))
+  test_data <- unlist(test_data)
+
+  lm_test <- lm(test_data ~ ROI_reconstruction)
+
+  return(weighted_POIs_at_iter)
 }

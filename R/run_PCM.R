@@ -57,6 +57,14 @@ run_PCM <- function(input_dir, output_dir, POI_file, analysis_type, holdout = 2,
   # Convert each row of POIs into its own dataframe for lm
   POIs_list <- apply(POIs, 1, POIs_to_dfs, sample_size)
 
+  # Initialize summary file
+  summary_df  <- data.frame(matrix(NA, nrow = length(data_to_use),
+                                   ncol = (length(POIs_list) * 2) + 11))
+  colnames(summary_df) <- c('ROI', 'analysis_type', POI_names,
+                        paste(POI_names, '-?', sep = ''),
+                        'Recon-?', 'St.Err', 't', 'p', 'Adj.r', 'F', 'df1',
+                        'df2', 'Branches')
+
   print(paste('Analysis type:', analysis_type), quote = FALSE)
 
   # else if (analysis_type == 'cross_val'), num_iters = number of iterations specified in num_iters (default = 1000)
@@ -76,13 +84,16 @@ run_PCM <- function(input_dir, output_dir, POI_file, analysis_type, holdout = 2,
                                                    sep = ''))
 
     for (iter in seq(1, num_iters)) {
-      train_test_loop_output_at_iter <- train_test_loop(data_for_ROI, ROI,
+      train_test_loop_output_at_iter <- train_test_loop(data_for_ROI, ROI, i,
                                                         POI_names, POIs_list,
                                                         analysis_type, holdout,
-                                                        output_dir, CV_log, iter)
+                                                        output_dir, CV_log, summary_df, iter)
       CV_log <- train_test_loop_output_at_iter[[2]]
+      summary_df <- train_test_loop_output_at_iter[[4]]
     }
   }
+
+  data_logger(summary_df, 'summary', analysis_type, '', output_dir, n_path)
 
     # 2.1. Split data
     # split_data.R

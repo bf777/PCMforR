@@ -35,5 +35,7 @@ data_logger <- function(input_data, data_type, analysis_type, ROI, output_dir, n
                                                       '.csv', sep = '')))
   } else if (data_type == 'summary') {
     # Record summary data
+    write.csv(input_data, file.path(output_dir, paste('summary_analysis_', analysis_type,
+                                                      '.csv', sep = '')), row.names = FALSE)
   }
 }
