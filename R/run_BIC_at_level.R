@@ -156,6 +156,9 @@ run_BIC_at_level <- function(train_data_orig, POIs_list, POI_names, POIs_to_use,
   # Get overall coefficient (intercept)
   POI_overall_fit <- summary(POI_weights_lm)$coefficients[1,1]
 
+  # Get t statistics
+  POI_t_stats <- summary(POI_weights_lm)$coefficients[2,1:4]
+
   # Get overall R^2
   POI_R_squared <- summary(POI_weights_lm)$adj.r.squared
 
@@ -174,13 +177,16 @@ run_BIC_at_level <- function(train_data_orig, POIs_list, POI_names, POIs_to_use,
     CV_log[iter, 2] <- analysis_type
 
     # Identified POIs
-    CV_log[iter, 3:length(POI_names)] <- identified_POIs
+    CV_log[iter, 3:(length(POI_names) + 2)] <- identified_POIs
 
     # POI weights
     CV_log[iter, (length(POI_names) + 3):(2 * (length(POI_names)) + 2)] <- POI_weights_for_log
 
     # Overall fit
     CV_log[iter, (2 * (length(POI_names)) + 2) + 1] <- POI_overall_fit
+
+    # t statistics
+    CV_log[iter, ((2 * (length(POI_names)) + 2) + 1):((2 * (length(POI_names)) + 2) + 4)] <- POI_t_stats
 
     # Overall R^2
     CV_log[iter, (2 * (length(POI_names)) + 2) + 5] <- POI_R_squared
@@ -198,14 +204,16 @@ run_BIC_at_level <- function(train_data_orig, POIs_list, POI_names, POIs_to_use,
     summary_df[ROI_idx, 2] <- analysis_type
 
     # Identified POIs
-    summary_df[ROI_idx, 3:length(POI_names)] <- identified_POIs
+    summary_df[ROI_idx, 3:(length(POI_names) + 2)] <- identified_POIs
 
     # POI weights
     summary_df[ROI_idx, (length(POI_names) + 3):(2 * (length(POI_names)) + 2)] <- POI_weights_for_log
 
     # Overall fit
-    print(POI_overall_fit)
     summary_df[ROI_idx, (2 * (length(POI_names)) + 2) + 1] <- POI_overall_fit
+
+    # t statistics
+    summary_df[ROI_idx, ((2 * (length(POI_names)) + 2) + 1):((2 * (length(POI_names)) + 2) + 4)] <- POI_t_stats
 
     # Overall R^2
     summary_df[ROI_idx, (2 * (length(POI_names)) + 2) + 5] <- POI_R_squared
@@ -223,7 +231,14 @@ run_BIC_at_level <- function(train_data_orig, POIs_list, POI_names, POIs_to_use,
   weighted_POIs_list <- list()
 
   for (POI_to_weight_idx in seq(1,length(POIs_list))) {
-    POI_to_weight <- unlist(POIs_list[POI_to_weight_idx])
+    POI_to_weight <- POIs_list[POI_to_weight_idx]
+    # If doing cross-validation, apply holdout to POI_to_weight
+    if (analysis_type == 'cross_val') {
+      POI_to_weight <- unlist(data.frame(POI_to_weight[[1]][-held_out_idx,]))
+    } else {
+      POI_to_weight <- unlist(POI_to_weight)
+    }
+
     POI_to_weight_name <- POI_names[POI_to_weight_idx]
     if(POI_to_weight_name %in% POIs_to_use) {
       POI_to_weight <- POI_to_weight * POI_weights[POI_to_weight_name]

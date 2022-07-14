@@ -54,8 +54,15 @@ train_test_loop <- function(data_for_ROI, ROI, ROI_idx, POI_names, POIs_list, an
                                             output_dir, held_out_idx, CV_log, summary_df, iter)
 
   # TESTING
-  ROI_reconstruction <- unlist(list(weighted_POIs_at_iter[[3]]))
+  if (analysis_type == 'cross_val') {
+    ROI_reconstruction <- unlist(list(data.frame(weighted_POIs_at_iter[[3]])[held_out_idx,]))
+  } else {
+    ROI_reconstruction <- unlist(list(weighted_POIs_at_iter[[3]]))
+  }
+
   test_data <- unlist(test_data)
+
+  print(length(test_data))
 
   lm_test <- lm(test_data ~ ROI_reconstruction)
 
