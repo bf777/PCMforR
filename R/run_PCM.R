@@ -91,6 +91,10 @@ run_PCM <- function(input_dir, output_dir, POI_file, analysis_type, holdout = 2,
       CV_log <- train_test_loop_output_at_iter[[2]]
       summary_df <- train_test_loop_output_at_iter[[4]]
     }
+
+    if (analysis_type == 'cross_val') {
+      summary_df[i, 3:((2 * (length(POI_names)) + 2) + 8)] <- colMeans(CV_log[,3:ncol(CV_log)])
+    }
   }
 
   data_logger(summary_df, 'summary', analysis_type, '', output_dir, n_path)

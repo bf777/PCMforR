@@ -18,7 +18,7 @@
 #' @param ROI The name of the current *region of interest (ROI)* within which to run the model.
 #' @param held_out_idx If `analysis_type` is `cross_val`,indicates the held-out values for this iteration.
 #' @param iter The current iteration (relevant for multi-iteration analyses such as cross-validation and individual analyses).
-run_BIC_at_level <- function(train_data_orig, POIs_list, POI_names, POIs_to_use, analysis_type,
+run_BIC_at_level <- function(train_data_orig, test_data, POIs_list, POI_names, POIs_to_use, analysis_type,
                              ROI, ROI_idx, output_dir, held_out_idx, CV_log, summary_df, iter) {
 
   # Unlist train_data for lm
@@ -168,41 +168,31 @@ run_BIC_at_level <- function(train_data_orig, POIs_list, POI_names, POIs_to_use,
   identified_POIs <- rep(0, length(POI_names))
   identified_POIs[match(unique(POIs_to_use), POI_names)] <- 1
 
+  # Create summary for given ROI
+  # Column 1: ROI
+  summary_df[ROI_idx, 1] <- ROI
+
+  # Column 2: analysis type
+  summary_df[ROI_idx, 2] <- analysis_type
+
   # If we're doing individual or cross-validation, record POI_weights, POI_R_squared, POI_F_stats for iteration
-  if (analysis_type == 'cross_val') {
-    # Column 1: ROI
-    CV_log[iter, 1] <- ROI
+ if (analysis_type == 'cross_val') {
+   # Column 1: ROI
+   CV_log[iter, 1] <- ROI
 
-    # Column 2: analysis type
-    CV_log[iter, 2] <- analysis_type
+   # Column 2: analysis type
+   CV_log[iter, 2] <- analysis_type
 
-    # Identified POIs
-    CV_log[iter, 3:(length(POI_names) + 2)] <- identified_POIs
+   # Identified POIs
+   CV_log[iter, 3:(length(POI_names) + 2)] <- identified_POIs
 
-    # POI weights
-    CV_log[iter, (length(POI_names) + 3):(2 * (length(POI_names)) + 2)] <- POI_weights_for_log
+   # POI weights
+   CV_log[iter, (length(POI_names) + 3):(2 * (length(POI_names)) + 2)] <- POI_weights_for_log
 
-    # Overall fit
-    CV_log[iter, (2 * (length(POI_names)) + 2) + 1] <- POI_overall_fit
-
-    # t statistics
-    CV_log[iter, ((2 * (length(POI_names)) + 2) + 1):((2 * (length(POI_names)) + 2) + 4)] <- POI_t_stats
-
-    # Overall R^2
-    CV_log[iter, (2 * (length(POI_names)) + 2) + 5] <- POI_R_squared
-
-    # F statistics
-    CV_log[iter, ((2 * (length(POI_names)) + 2) + 6):((2 * (length(POI_names)) + 2) + 8)] <- POI_F_stats
-
-    data_logger(CV_log, 'CV_log', analysis_type, ROI, output_dir, n_path)
-  } else {
-    # Create summary for given ROI
-    # Column 1: ROI
-    summary_df[ROI_idx, 1] <- ROI
-
-    # Column 2: analysis type
-    summary_df[ROI_idx, 2] <- analysis_type
-
+   # Overall fit
+   CV_log[iter, (2 * (length(POI_names)) + 2) + 1] <- POI_overall_fit
+ }
+ else {
     # Identified POIs
     summary_df[ROI_idx, 3:(length(POI_names) + 2)] <- identified_POIs
 
@@ -226,7 +216,7 @@ run_BIC_at_level <- function(train_data_orig, POIs_list, POI_names, POIs_to_use,
   }
 
   # Build reconstructed ROI
-  ROI_reconstruction <- matrix(POI_overall_fit, nrow = nrow(train_data_orig), ncol = ncol(train_data_orig))
+  ROI_reconstruction <- matrix(POI_overall_fit, nrow = nrow(test_data), ncol = ncol(test_data))
 
   weighted_POIs_list <- list()
 
@@ -234,7 +224,7 @@ run_BIC_at_level <- function(train_data_orig, POIs_list, POI_names, POIs_to_use,
     POI_to_weight <- POIs_list[POI_to_weight_idx]
     # If doing cross-validation, apply holdout to POI_to_weight
     if (analysis_type == 'cross_val') {
-      POI_to_weight <- unlist(data.frame(POI_to_weight[[1]][-held_out_idx,]))
+      POI_to_weight <- unlist(data.frame(POI_to_weight[[1]][held_out_idx,]))
     } else {
       POI_to_weight <- unlist(POI_to_weight)
     }
@@ -243,6 +233,7 @@ run_BIC_at_level <- function(train_data_orig, POIs_list, POI_names, POIs_to_use,
     if(POI_to_weight_name %in% POIs_to_use) {
       POI_to_weight <- POI_to_weight * POI_weights[POI_to_weight_name]
       assign(paste(POI_to_weight_name, '_weighted', sep = ''), POI_to_weight, envir = .GlobalEnv)
+
       weighted_POIs_list[[POI_to_weight_idx]] <- POI_to_weight
 
       # Add weighted POIs to reconstructed ROI

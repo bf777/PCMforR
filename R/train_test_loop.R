@@ -49,13 +49,14 @@ train_test_loop <- function(data_for_ROI, ROI, ROI_idx, POI_names, POIs_list, an
 
   # Train the model at the current level by finding combination of paths with lowest BIC
   # run_BIC_at_level.R
-  weighted_POIs_at_iter <- run_BIC_at_level(train_data, POIs_list, POI_names,
+  weighted_POIs_at_iter <- run_BIC_at_level(train_data, test_data, POIs_list, POI_names,
                                             POIs_to_use, analysis_type, ROI, ROI_idx,
                                             output_dir, held_out_idx, CV_log, summary_df, iter)
 
   # TESTING
   if (analysis_type == 'cross_val') {
-    ROI_reconstruction <- unlist(list(data.frame(weighted_POIs_at_iter[[3]])[held_out_idx,]))
+    # ROI_reconstruction <- unlist(list(data.frame(weighted_POIs_at_iter[[3]])[held_out_idx,]))
+    ROI_reconstruction <- unlist(list(data.frame(weighted_POIs_at_iter[[3]])))
     # print(held_out_idx)
     # print(unlist(list(weighted_POIs_at_iter[[3]])))
     # print(unlist(list(data.frame(weighted_POIs_at_iter[[3]])[held_out_idx,])))
@@ -65,7 +66,23 @@ train_test_loop <- function(data_for_ROI, ROI, ROI_idx, POI_names, POIs_list, an
 
   test_data <- unlist(test_data)
 
-  # lm_test <- lm(test_data ~ ROI_reconstruction)
+  lm_test <- lm(test_data ~ ROI_reconstruction)
+  lm_test_summary <- summary(lm_test)
 
-  return(weighted_POIs_at_iter)
+  CV_log <- weighted_POIs_at_iter[[2]]
+
+  if (analysis_type == 'cross_val') {
+    # t statistics
+    CV_log[iter, ((2 * (length(POI_names)) + 2) + 1):((2 * (length(POI_names)) + 2) + 4)] <- lm_test_summary$coefficients[2,1:4]
+
+    # Overall R^2
+    CV_log[iter, (2 * (length(POI_names)) + 2) + 5] <- lm_test_summary$adj.r.squared
+
+    # F statistics
+    CV_log[iter, ((2 * (length(POI_names)) + 2) + 6):((2 * (length(POI_names)) + 2) + 8)] <- lm_test_summary$f[1:3]
+
+    data_logger(CV_log, 'CV_log', analysis_type, ROI, output_dir, n_path)
+  }
+
+  return(list(weighted_POIs_at_iter[[1]], CV_log, ROI_reconstruction, weighted_POIs_at_iter[[4]]))
 }
