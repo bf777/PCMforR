@@ -16,13 +16,13 @@
 #' @param output_dir A string to the folder where you would like all outputs to be written.
 #' @param iter The current iteration (relevant for multi-iteration analyses such as cross-validation and individual analyses).
 train_test_loop <- function(data_for_ROI, ROI, ROI_idx, POI_names, POIs_list, analysis_type,
-                            holdout, output_dir, CV_log, summary_df, iter) {
+                            holdout, output_dir, CV_log, IND_log, summary_df, iter) {
   print(paste('iter:', iter), quote = FALSE)
 
   # TRAINING
 
   # Split data into train and test
-  split_data_outputs <- split_data(data_for_ROI, analysis_type, holdout)
+  split_data_outputs <- split_data(data_for_ROI, analysis_type, holdout, iter)
 
   # Get split train and test data
   train_data <- split_data_outputs[[1]]
@@ -38,6 +38,10 @@ train_test_loop <- function(data_for_ROI, ROI, ROI_idx, POI_names, POIs_list, an
       data_for_POI_train <- data.frame(data_for_POI[-held_out_idx,])
       data_for_POI_train <- unlist(data_for_POI_train)
       assign(POI_name, data_for_POI_train, envir = .GlobalEnv)
+    } else if (analysis_type == 'individual') {
+      data_for_POI_train <- data.frame(data_for_POI[iter,])
+      data_for_POI_train <- unlist(data_for_POI_train)
+      assign(POI_name, data_for_POI_train, envir = .GlobalEnv)
     } else {
       data_for_POI <- unlist(data.frame(data_for_POI))
       assign(POI_name, data_for_POI, envir = .GlobalEnv)
@@ -51,17 +55,17 @@ train_test_loop <- function(data_for_ROI, ROI, ROI_idx, POI_names, POIs_list, an
   # run_BIC_at_level.R
   weighted_POIs_at_iter <- run_BIC_at_level(train_data, test_data, POIs_list, POI_names,
                                             POIs_to_use, analysis_type, ROI, ROI_idx,
-                                            output_dir, held_out_idx, CV_log, summary_df, iter)
+                                            output_dir, held_out_idx, CV_log, IND_log, summary_df, iter)
 
   # TESTING
   if (analysis_type == 'cross_val') {
     # ROI_reconstruction <- unlist(list(data.frame(weighted_POIs_at_iter[[3]])[held_out_idx,]))
-    ROI_reconstruction <- unlist(list(data.frame(weighted_POIs_at_iter[[3]])))
+    ROI_reconstruction <- unlist(list(data.frame(weighted_POIs_at_iter[[4]])))
     # print(held_out_idx)
     # print(unlist(list(weighted_POIs_at_iter[[3]])))
     # print(unlist(list(data.frame(weighted_POIs_at_iter[[3]])[held_out_idx,])))
   } else {
-    ROI_reconstruction <- unlist(list(weighted_POIs_at_iter[[3]]))
+    ROI_reconstruction <- unlist(list(weighted_POIs_at_iter[[4]]))
   }
 
   test_data <- unlist(test_data)
@@ -70,6 +74,7 @@ train_test_loop <- function(data_for_ROI, ROI, ROI_idx, POI_names, POIs_list, an
   lm_test_summary <- summary(lm_test)
 
   CV_log <- weighted_POIs_at_iter[[2]]
+  IND_log <- weighted_POIs_at_iter[[3]]
 
   if (analysis_type == 'cross_val') {
     # t statistics
@@ -82,7 +87,17 @@ train_test_loop <- function(data_for_ROI, ROI, ROI_idx, POI_names, POIs_list, an
     CV_log[iter, ((2 * (length(POI_names)) + 2) + 6):((2 * (length(POI_names)) + 2) + 8)] <- lm_test_summary$f[1:3]
 
     data_logger(CV_log, 'CV_log', analysis_type, ROI, output_dir, n_path)
+  } else if (analysis_type == 'individual') {
+    # t statistics
+    IND_log[iter, ((2 * (length(POI_names)) + 2) + 1):((2 * (length(POI_names)) + 2) + 4)] <- lm_test_summary$coefficients[2,1:4]
+
+    # Overall R^2
+    IND_log[iter, (2 * (length(POI_names)) + 2) + 5] <- lm_test_summary$adj.r.squared
+
+    # F statistics
+    IND_log[iter, ((2 * (length(POI_names)) + 2) + 6):((2 * (length(POI_names)) + 2) + 8)] <- lm_test_summary$f[1:3]
+    data_logger(IND_log, 'IND_log', analysis_type, ROI, output_dir, n_path)
   }
 
-  return(list(weighted_POIs_at_iter[[1]], CV_log, ROI_reconstruction, weighted_POIs_at_iter[[4]]))
+  return(list(weighted_POIs_at_iter[[1]], CV_log, IND_log, ROI_reconstruction, weighted_POIs_at_iter[[5]]))
 }

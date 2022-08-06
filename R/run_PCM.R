@@ -83,17 +83,29 @@ run_PCM <- function(input_dir, output_dir, POI_file, analysis_type, holdout = 2,
                                                    seq(1, holdout),
                                                    sep = ''))
 
+    # Initialize inidvidual log (will remain blank if not using analysis_type = `individual`)
+    IND_log <- data.frame(matrix(0, nrow = num_iters,
+                                ncol = (length(POIs_list) * 2) + 11))
+    colnames(IND_log) <- c('ROI', 'analysis_type', POI_names,
+                          paste(POI_names, '-?', sep = ''),
+                          'Recon-?', 'St.Err', 't', 'p', 'Adj.r', 'F', 'df1',
+                          'df2', 'Branches')
+
     for (iter in seq(1, num_iters)) {
       train_test_loop_output_at_iter <- train_test_loop(data_for_ROI, ROI, i,
                                                         POI_names, POIs_list,
                                                         analysis_type, holdout,
-                                                        output_dir, CV_log, summary_df, iter)
+                                                        output_dir, CV_log, IND_log,
+                                                        summary_df, iter)
       CV_log <- train_test_loop_output_at_iter[[2]]
-      summary_df <- train_test_loop_output_at_iter[[4]]
+      IND_log <- train_test_loop_output_at_iter[[3]]
+      summary_df <- train_test_loop_output_at_iter[[5]]
     }
 
     if (analysis_type == 'cross_val') {
       summary_df[i, 3:((2 * (length(POI_names)) + 2) + 8)] <- colMeans(CV_log[,3:ncol(CV_log)])
+    } else if (analysis_type == 'individual') {
+      summary_df[i, 3:((2 * (length(POI_names)) + 2) + 8)] <- colMeans(IND_log[,3:ncol(IND_log)])
     }
   }
 

@@ -19,7 +19,7 @@
 #' @param held_out_idx If `analysis_type` is `cross_val`,indicates the held-out values for this iteration.
 #' @param iter The current iteration (relevant for multi-iteration analyses such as cross-validation and individual analyses).
 run_BIC_at_level <- function(train_data_orig, test_data, POIs_list, POI_names, POIs_to_use, analysis_type,
-                             ROI, ROI_idx, output_dir, held_out_idx, CV_log, summary_df, iter) {
+                             ROI, ROI_idx, output_dir, held_out_idx, CV_log, IND_log, summary_df, iter) {
 
   # Unlist train_data for lm
   train_data <- unlist(train_data_orig)
@@ -191,29 +191,43 @@ run_BIC_at_level <- function(train_data_orig, test_data, POIs_list, POI_names, P
 
    # Overall fit
    CV_log[iter, (2 * (length(POI_names)) + 2) + 1] <- POI_overall_fit
+ } else if (analysis_type == 'individual') {
+   # Column 1: ROI
+   IND_log[iter, 1] <- ROI
+
+   # Column 2: analysis type
+   IND_log[iter, 2] <- analysis_type
+
+   # Identified POIs
+   IND_log[iter, 3:(length(POI_names) + 2)] <- identified_POIs
+
+   # POI weights
+   IND_log[iter, (length(POI_names) + 3):(2 * (length(POI_names)) + 2)] <- POI_weights_for_log
+
+   # Overall fit
+   IND_log[iter, (2 * (length(POI_names)) + 2) + 1] <- POI_overall_fit
+ } else {
+   # Identified POIs
+   summary_df[ROI_idx, 3:(length(POI_names) + 2)] <- identified_POIs
+
+   # POI weights
+   summary_df[ROI_idx, (length(POI_names) + 3):(2 * (length(POI_names)) + 2)] <- POI_weights_for_log
+
+   # Overall fit
+   summary_df[ROI_idx, (2 * (length(POI_names)) + 2) + 1] <- POI_overall_fit
+
+   # t statistics
+   summary_df[ROI_idx, ((2 * (length(POI_names)) + 2) + 1):((2 * (length(POI_names)) + 2) + 4)] <- POI_t_stats
+
+   # Overall R^2
+   summary_df[ROI_idx, (2 * (length(POI_names)) + 2) + 5] <- POI_R_squared
+
+   # F statistics
+   summary_df[ROI_idx, ((2 * (length(POI_names)) + 2) + 6):((2 * (length(POI_names)) + 2) + 8)] <- POI_F_stats
+
+   # N path
+   summary_df[ROI_idx, ((2 * (length(POI_names)) + 2) + 9)] <- n_path
  }
- else {
-    # Identified POIs
-    summary_df[ROI_idx, 3:(length(POI_names) + 2)] <- identified_POIs
-
-    # POI weights
-    summary_df[ROI_idx, (length(POI_names) + 3):(2 * (length(POI_names)) + 2)] <- POI_weights_for_log
-
-    # Overall fit
-    summary_df[ROI_idx, (2 * (length(POI_names)) + 2) + 1] <- POI_overall_fit
-
-    # t statistics
-    summary_df[ROI_idx, ((2 * (length(POI_names)) + 2) + 1):((2 * (length(POI_names)) + 2) + 4)] <- POI_t_stats
-
-    # Overall R^2
-    summary_df[ROI_idx, (2 * (length(POI_names)) + 2) + 5] <- POI_R_squared
-
-    # F statistics
-    summary_df[ROI_idx, ((2 * (length(POI_names)) + 2) + 6):((2 * (length(POI_names)) + 2) + 8)] <- POI_F_stats
-
-    # N path
-    summary_df[ROI_idx, ((2 * (length(POI_names)) + 2) + 9)] <- n_path
-  }
 
   # Build reconstructed ROI
   ROI_reconstruction <- matrix(POI_overall_fit, nrow = nrow(test_data), ncol = ncol(test_data))
@@ -225,6 +239,8 @@ run_BIC_at_level <- function(train_data_orig, test_data, POIs_list, POI_names, P
     # If doing cross-validation, apply holdout to POI_to_weight
     if (analysis_type == 'cross_val') {
       POI_to_weight <- unlist(data.frame(POI_to_weight[[1]][held_out_idx,]))
+    } else if (analysis_type == 'individual') {
+      POI_to_weight <- unlist(data.frame(POI_to_weight[[1]][iter,]))
     } else {
       POI_to_weight <- unlist(POI_to_weight)
     }
@@ -242,7 +258,7 @@ run_BIC_at_level <- function(train_data_orig, test_data, POIs_list, POI_names, P
   }
 
   # Continue to testing
-  return(list(weighted_POIs_list, CV_log, ROI_reconstruction, summary_df))
+  return(list(weighted_POIs_list, CV_log, IND_log, ROI_reconstruction, summary_df))
 }
 
 calc_lm_BIC <- function(POI, POIs_to_use, train_data) {
