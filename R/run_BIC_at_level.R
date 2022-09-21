@@ -43,7 +43,7 @@ run_BIC_at_level <- function(train_data_orig, test_data, POIs_list, POI_names, P
   BIC_log_list <- vector()
 
   # Initialize list of horizontal levels for each vertical level
-  horiz_level_list <- vector()
+  horiz_level_list <- vector('list', max_vert_level)
 
   # Initialize BIC paths dataframe
   BIC_paths <- data.frame(matrix(NA, nrow = length(POIs_list),
@@ -55,7 +55,17 @@ run_BIC_at_level <- function(train_data_orig, test_data, POIs_list, POI_names, P
   # Initialize path number at 1
   n_path <- 1
 
+  # Initialize all level checker
+  all_levels_checked <- FALSE
+
   while(vert_level_idx < max_vert_level) {
+    if (n_path >= 100) {
+      print("Error: cannot converge on solution after 100 attempts. Exiting loop.")
+      break
+    }
+    if (all_levels_checked == TRUE) {
+      break
+    }
     if (analysis_type != 'cross_val') {
       print(paste('Checking level', vert_level_idx), quote = FALSE)
     }
@@ -90,13 +100,15 @@ run_BIC_at_level <- function(train_data_orig, test_data, POIs_list, POI_names, P
       if (abs(min_BIC - previous_min_BIC) > criterion) {
         # If best BIC already found in horizontal level, check if it's the same
         # horizontal level
-        if (length(horiz_level) == 0) {
-          if (length(duplicated(BICs))) {
-            equivalent_BICs <- which(duplicated(BICs) == BICs)
+        if (!(min_BIC_idx %in% horiz_level)) {
+          # if (length(horiz_level) == 0) {
+          if (any(duplicated(BICs))) {
+            equivalent_BICs <- which(duplicated(BICs))
             # If we have equivalency and we're not already in a horizontal level,
             # record indices of equivalent BICs in horiz_level
             horiz_level <- c(horiz_level, equivalent_BICs)
-            horiz_level_list <- c(horiz_level_list, horiz_level)
+            horiz_level_list[[min_BIC_idx]] <- horiz_level
+            print(horiz_level_list)
             # Continue at next vertical level
           }
         }
@@ -113,20 +125,24 @@ run_BIC_at_level <- function(train_data_orig, test_data, POIs_list, POI_names, P
 
             # Export all BIC paths
             data_logger(BIC_paths, 'BIC_paths', analysis_type, ROI, output_dir, n_path)
-            break
+            # break
           }
 
-        # Check if horizontal level is empty, so long as we're not on the first
-        # vertical level
-        while (length(horiz_level_list[vert_level_idx]) == 0) {
-          if (vert_level_idx == 1) {
-            # If on first vertical level, continue to testing
-            break
-          } else {
-            # If not, check horizontal level at previous vertical level
-            vert_level_idx <- vert_level_idx - 1
-            print(paste("Returning to level", vert_level_idx, quote = FALSE))
-          }
+          # Check if horizontal level is empty, so long as we're not on the first
+          # vertical level
+          while (length(horiz_level_list[[vert_level_idx]]) == 0) {
+            if (vert_level_idx == 1) {
+              # If on first vertical level, continue to testing
+              break
+            } else {
+              # If not, check horizontal level at previous vertical level
+              vert_level_idx <- vert_level_idx - 1
+              print(paste("Returning to level", vert_level_idx), quote = FALSE)
+              if (vert_level_idx == 1) {
+                # If on first vertical level, continue to testing
+                all_levels_checked <- TRUE
+                break
+            }
           }
         }
       # If the horizontal level at the current vertical level is not empty,
@@ -139,7 +155,8 @@ run_BIC_at_level <- function(train_data_orig, test_data, POIs_list, POI_names, P
     }
 
   # If we're on the first level, go to the next level without recording BIC
-  vert_level_idx <- vert_level_idx + 1
+    }
+    vert_level_idx <- vert_level_idx + 1
   }
   # If BIC not improved vs. previous and empty level found, finish training
 
