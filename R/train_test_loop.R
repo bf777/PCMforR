@@ -17,7 +17,7 @@
 #' @param iter The current iteration (relevant for multi-iteration analyses such as cross-validation and individual analyses).
 train_test_loop <- function(data_for_ROI, ROI, ROI_idx, POI_names, POIs_list, analysis_type,
                             holdout, output_dir, CV_log, IND_log, summary_df, iter) {
-  print(paste('iter:', iter), quote = FALSE)
+  cat(paste('iter:', iter, '\n'))
 
   # TRAINING
 
@@ -61,9 +61,6 @@ train_test_loop <- function(data_for_ROI, ROI, ROI_idx, POI_names, POIs_list, an
   if (analysis_type == 'cross_val') {
     # ROI_reconstruction <- unlist(list(data.frame(weighted_POIs_at_iter[[3]])[held_out_idx,]))
     ROI_reconstruction <- unlist(list(data.frame(weighted_POIs_at_iter[[4]])))
-    # print(held_out_idx)
-    # print(unlist(list(weighted_POIs_at_iter[[3]])))
-    # print(unlist(list(data.frame(weighted_POIs_at_iter[[3]])[held_out_idx,])))
   } else {
     ROI_reconstruction <- unlist(list(weighted_POIs_at_iter[[4]]))
   }

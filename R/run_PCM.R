@@ -33,9 +33,6 @@ run_PCM <- function(input_dir, output_dir, POI_file, analysis_type, holdout = 2,
   # Extract ROI names
   ROIs <- lapply(ROI_files, function(filename) strsplit(basename(filename), '_')[[1]][1])
 
-  # print(data_to_use)
-  # print(ROIs)
-
   # Get POIs
   POI_df <- read.csv(POI_file, header = FALSE)
   POI_names <- unlist(POI_df[1])
@@ -65,13 +62,14 @@ run_PCM <- function(input_dir, output_dir, POI_file, analysis_type, holdout = 2,
                         'Recon-?', 'St.Err', 't', 'p', 'Adj.r', 'F', 'df1',
                         'df2', 'Branches')
 
-  print(paste('Analysis type:', analysis_type), quote = FALSE)
+  cat(paste('Analysis type:', analysis_type, '\n'))
 
   # else if (analysis_type == 'cross_val'), num_iters = number of iterations specified in num_iters (default = 1000)
   for (i in seq_along(data_to_use)) {
     data_for_ROI <- data_to_use[i]
     ROI <- ROIs[i]
-    print(paste('ROI:', ROI), quote = FALSE)
+    cat('\n')
+    cat(paste('ROI:', ROI, '\n'))
 
     # Initialize CV log (will remain blank if not using analysis_type = `cross_val`)
     CV_log <- data.frame(matrix(0, nrow = num_iters,
@@ -111,8 +109,6 @@ run_PCM <- function(input_dir, output_dir, POI_file, analysis_type, holdout = 2,
 
   data_logger(summary_df, 'summary', analysis_type, '', output_dir, n_path)
 
-    # 2.1. Split data
-    # split_data.R
-    # 2.2. Calculate and update BIC scores
-    # calc_BIC.R
+  cat('\n')
+  cat(paste('PCMforR has finished running! You can find the outputs in', output_dir, '\n'))
 }

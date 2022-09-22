@@ -29,6 +29,7 @@ run_BIC_at_level <- function(train_data_orig, test_data, POIs_list, POI_names, P
 
   # Initialize list of all best BICs
   best_BICs <- vector()
+  best_BIC_idxs <- vector()
 
   # Initialize horizontal and vertical levels
   horiz_level_idx <- 1
@@ -43,7 +44,7 @@ run_BIC_at_level <- function(train_data_orig, test_data, POIs_list, POI_names, P
   BIC_log_list <- vector()
 
   # Initialize list of horizontal levels for each vertical level
-  horiz_level_list <- vector('list', max_vert_level)
+  vert_level_list <- vector('list', max_vert_level)
 
   # Initialize BIC paths dataframe
   BIC_paths <- data.frame(matrix(NA, nrow = length(POIs_list),
@@ -59,15 +60,16 @@ run_BIC_at_level <- function(train_data_orig, test_data, POIs_list, POI_names, P
   all_levels_checked <- FALSE
 
   while(vert_level_idx < max_vert_level) {
+
     if (n_path >= 100) {
-      print("Error: cannot converge on solution after 100 attempts. Exiting loop.")
+      cat("Error: cannot converge on solution after 100 attempts. Exiting loop.\n")
       break
     }
     if (all_levels_checked == TRUE) {
       break
     }
     if (analysis_type != 'cross_val') {
-      print(paste('Checking level', vert_level_idx), quote = FALSE)
+      cat(paste('Checking level', vert_level_idx, '\n'))
     }
 
     # Calculate all BIC scores at level
@@ -77,6 +79,7 @@ run_BIC_at_level <- function(train_data_orig, test_data, POIs_list, POI_names, P
     min_BIC <- min(BICs)
     best_BICs <- c(best_BICs, min_BIC)
     min_BIC_idx <- match(min_BIC, BICs)
+    best_BIC_idxs <- c(best_BIC_idxs, min_BIC_idx)
 
     # horiz_level is list of equivalent BIC scores at horizontal level
     horiz_level <- vector()
@@ -84,9 +87,11 @@ run_BIC_at_level <- function(train_data_orig, test_data, POIs_list, POI_names, P
     # add POI with new best BIC to POIs_to_use so that it can be included in
     # next level of BIC
     # Record all BIC scores at vertical level in BIC log
-    BIC_log[vert_level_idx, 1:length(POIs_list)] <- BICs
+    BIC_log[vert_level_idx, 1:length(POI_names)] <- BICs
+
+    # Record identified POIs
     POIs_to_use <- c(POIs_to_use, POI_names[min_BIC_idx])
-    BIC_log[vert_level_idx, length(POIs_list) + 1] <- min_BIC_idx
+    BIC_log[vert_level_idx, length(POI_names) + 1] <- min_BIC_idx
     BIC_paths[horiz_level_idx, vert_level_idx] <- min_BIC_idx
 
     # If BIC improved vs. previous best BIC more than criterion, check if BIC is better than other BICS +/- 2
@@ -107,8 +112,7 @@ run_BIC_at_level <- function(train_data_orig, test_data, POIs_list, POI_names, P
             # If we have equivalency and we're not already in a horizontal level,
             # record indices of equivalent BICs in horiz_level
             horiz_level <- c(horiz_level, equivalent_BICs)
-            horiz_level_list[[min_BIC_idx]] <- horiz_level
-            print(horiz_level_list)
+            vert_level_list[[vert_level_idx]] <- horiz_level
             # Continue at next vertical level
           }
         }
@@ -118,8 +122,6 @@ run_BIC_at_level <- function(train_data_orig, test_data, POIs_list, POI_names, P
         } else {
           # If BIC not improved vs criterion:
           # Check if min BIC < best BIC
-          # print(min_BIC)
-          # print(previous_min_BIC)
           if (min_BIC <= previous_min_BIC) {
             data_logger(BIC_log, 'BIC_log', analysis_type, ROI, output_dir, 'best')
 
@@ -130,24 +132,56 @@ run_BIC_at_level <- function(train_data_orig, test_data, POIs_list, POI_names, P
 
           # Check if horizontal level is empty, so long as we're not on the first
           # vertical level
-          while (length(horiz_level_list[[vert_level_idx]]) == 0) {
+          if (length(vert_level_list[[vert_level_idx]]) > 0) {
+            cat("Current horiz_level not empty\n")
+
+            # add previous bests to establish path to be tested
+            # Check which POIs were identified before the duplicate one
+            repeated_POI_name <- POI_names[vert_level_list[[vert_level_idx]]]
+            repeated_BIC_idx <- match(repeated_POI_name, POIs_to_use)
+            POIs_at_horiz_level <- na.omit(unlist(BIC_paths[horiz_level_idx, ]))
+            POIs_to_use <- POI_names[POIs_at_horiz_level]
+
+            # New path = new horizontal level
+            horiz_level_idx <- horiz_level_idx + 1
+            cat(paste("Searching level",vert_level_idx, "sub-path", horiz_level_idx - 1, '\n'))
+            #  Return to search sub-path
+          } else {
             if (vert_level_idx == 1) {
               # If on first vertical level, continue to testing
+              all_levels_checked <- TRUE
               break
             } else {
               # If not, check horizontal level at previous vertical level
-              vert_level_idx <- vert_level_idx - 1
-              print(paste("Returning to level", vert_level_idx), quote = FALSE)
-              if (vert_level_idx == 1) {
-                # If on first vertical level, continue to testing
-                all_levels_checked <- TRUE
-                break
+              while (vert_level_idx > 1) {
+                vert_level_idx <- vert_level_idx - 1
+                cat(paste("Returning to level", vert_level_idx, '\n'))
+                if (length(vert_level_list[[vert_level_idx]]) > 0) {
+                  cat("Current horiz_level not empty\n")
+
+                  # add previous bests to establish path to be tested
+                  # Check which POIs were identified before the duplicate one
+                  repeated_POI_name <- POI_names[vert_level_list[[vert_level_idx]]]
+                  repeated_BIC_idx <- match(repeated_POI_name, POIs_to_use)
+                  POIs_at_horiz_level <- na.omit(unlist(BIC_paths[horiz_level_idx, ]))
+                  POIs_to_use <- POI_names[POIs_at_horiz_level]
+
+                  # New path = new horizontal level
+                  horiz_level_idx <- horiz_level_idx + 1
+                  cat(paste("Searching level",vert_level_idx, "sub-path", horiz_level_idx - 1, '\n'))
+                  #  Return to search sub-path
+                  break
+                }
+                if (vert_level_idx == 1) {
+                  # If on first vertical level, continue to testing
+                  all_levels_checked <- TRUE
+                  break
+                }
+              }
             }
           }
-        }
       # If the horizontal level at the current vertical level is not empty,
       # continue BIC
-      # horiz_level_idx <- horiz_level_idx + 1
       n_path <- n_path + 1
 
       # Export BIC logs for path
@@ -168,7 +202,8 @@ run_BIC_at_level <- function(train_data_orig, test_data, POIs_list, POI_names, P
   # Get betas
   POI_weights <- summary(POI_weights_lm)$coefficients[,1]
   POI_weights_for_log <- rep(0, length(POI_names))
-  POI_weights_for_log[match(unique(POIs_to_use), POI_names)] <- POI_weights
+  POI_weights_no_intercept <- POI_weights[2:length(POI_weights)]
+  POI_weights_for_log[match(unique(POIs_to_use), POI_names)] <- POI_weights_no_intercept
 
   # Get overall coefficient (intercept)
   POI_overall_fit <- summary(POI_weights_lm)$coefficients[1,1]
