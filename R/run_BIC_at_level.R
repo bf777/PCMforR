@@ -137,8 +137,8 @@ run_BIC_at_level <- function(train_data_orig, test_data, POIs_list, POI_names, P
 
             # add previous bests to establish path to be tested
             # Check which POIs were identified before the duplicate one
-            repeated_POI_name <- POI_names[vert_level_list[[vert_level_idx]]]
-            repeated_BIC_idx <- match(repeated_POI_name, POIs_to_use)
+            equivalent_POI_name <- POI_names[vert_level_list[[vert_level_idx]]]
+            equivalent_BIC_idx <- match(equivalent_POI_name, POIs_to_use)
             POIs_at_horiz_level <- na.omit(unlist(BIC_paths[horiz_level_idx, ]))
             POIs_to_use <- POI_names[POIs_at_horiz_level]
 
@@ -161,14 +161,16 @@ run_BIC_at_level <- function(train_data_orig, test_data, POIs_list, POI_names, P
 
                   # add previous bests to establish path to be tested
                   # Check which POIs were identified before the duplicate one
-                  repeated_POI_name <- POI_names[vert_level_list[[vert_level_idx]]]
-                  repeated_BIC_idx <- match(repeated_POI_name, POIs_to_use)
-                  POIs_at_horiz_level <- na.omit(unlist(BIC_paths[horiz_level_idx, ]))
+                  equivalent_POI_name <- POI_names[vert_level_list[[vert_level_idx]]]
+                  equivalent_BIC_idx <- match(vert_level_list[[vert_level_idx]], BIC_paths[horiz_level_idx, ])
+                  POIs_at_horiz_level <- na.omit(unlist(BIC_paths[horiz_level_idx, 1:equivalent_BIC_idx - 1]))
+                  # print(equivalent_POI_name)
+                  # print(POIs_at_horiz_level)
                   POIs_to_use <- POI_names[POIs_at_horiz_level]
 
                   # New path = new horizontal level
                   horiz_level_idx <- horiz_level_idx + 1
-                  cat(paste("Searching level",vert_level_idx, "sub-path", horiz_level_idx - 1, '\n'))
+                  cat(paste("Searching level", vert_level_idx, "sub-path", horiz_level_idx - 1, '\n'))
                   #  Return to search sub-path
                   break
                 }
@@ -325,6 +327,7 @@ calc_lm_BIC <- function(POI, POIs_to_use, train_data) {
   }
 
   # Run lm
+  # print(formula_to_use)
   lm_at_level <- lm(as.formula(formula_to_use))
 
   # Calculate BIC on lm
