@@ -50,6 +50,9 @@ run_BIC_at_level <- function(train_data_orig, test_data, POIs_list, POI_names, P
   BIC_paths <- data.frame(matrix(NA, nrow = length(POIs_list),
                                  ncol = length(POIs_list)))
 
+  # Record best BIC at each path
+  best_BIC_on_path <- vector()
+
   # Initialize min_BIC at -1
   min_BIC <- -1
 
@@ -121,13 +124,23 @@ run_BIC_at_level <- function(train_data_orig, test_data, POIs_list, POI_names, P
 
         } else {
           # If BIC not improved vs criterion:
-          # Check if min BIC < best BIC
-          if (min_BIC <= previous_min_BIC) {
-            data_logger(BIC_log, 'BIC_log', analysis_type, ROI, output_dir, 'best')
+          best_BIC_on_path <- c(best_BIC_on_path, min_BIC)
+          data_logger(BIC_log, 'BIC_log', analysis_type, ROI, output_dir, 'best')
 
-            # Export all BIC paths
-            data_logger(BIC_paths, 'BIC_paths', analysis_type, ROI, output_dir, n_path)
-            # break
+          # Export all BIC paths
+          data_logger(BIC_paths, 'BIC_paths', analysis_type, ROI, output_dir, n_path)
+
+          # Compare current path to previous path BICs
+          for (previous_BIC in best_BIC_on_path) {
+            BIC_to_compare_idx <- which(best_BICs == previous_BIC)
+            if (abs(min_BIC - previous_BIC) > criterion) {
+              best_path_idx <- best_path_idx
+            } else {
+              # If equivalency, compare length of current path to other path with best BIC
+              if (length(BIC_paths[BIC_to_compare_idx,]) < length(BIC_paths[n_path,])) {
+                best_path_idx <- BIC_to_compare_idx
+              }
+            }
           }
 
           # Check if horizontal level is empty, so long as we're not on the first
@@ -144,7 +157,7 @@ run_BIC_at_level <- function(train_data_orig, test_data, POIs_list, POI_names, P
 
             # New path = new horizontal level
             horiz_level_idx <- horiz_level_idx + 1
-            cat(paste("Searching level",vert_level_idx, "sub-path", horiz_level_idx - 1, '\n'))
+            cat(paste("Searching level", vert_level_idx, "sub-path", horiz_level_idx - 1, '\n'))
             #  Return to search sub-path
           } else {
             if (vert_level_idx == 1) {
