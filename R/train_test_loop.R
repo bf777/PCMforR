@@ -15,8 +15,9 @@
 #' in your data to hold out on each iteration.
 #' @param output_dir A string to the folder where you would like all outputs to be written.
 #' @param iter The current iteration (relevant for multi-iteration analyses such as cross-validation and individual analyses).
+#' @param verbose (default = FALSE) If `TRUE`, output detailed information during computational runs.
 train_test_loop <- function(data_for_ROI, ROI, ROI_idx, POI_names, POIs_list, analysis_type,
-                            holdout, output_dir, CV_log, IND_log, summary_df, iter) {
+                            holdout, output_dir, CV_log, IND_log, summary_df, iter, verbose) {
   cat(paste('iter:', iter, '\n'))
 
   # TRAINING
@@ -55,11 +56,11 @@ train_test_loop <- function(data_for_ROI, ROI, ROI_idx, POI_names, POIs_list, an
   # run_BIC_at_level.R
   weighted_POIs_at_iter <- run_BIC_at_level(train_data, test_data, POIs_list, POI_names,
                                             POIs_to_use, analysis_type, ROI, ROI_idx,
-                                            output_dir, held_out_idx, CV_log, IND_log, summary_df, iter)
+                                            output_dir, held_out_idx, CV_log, IND_log,
+                                            summary_df, iter, verbose)
 
   # TESTING
   if (analysis_type == 'cross_val') {
-    # ROI_reconstruction <- unlist(list(data.frame(weighted_POIs_at_iter[[3]])[held_out_idx,]))
     ROI_reconstruction <- unlist(list(data.frame(weighted_POIs_at_iter[[4]])))
   } else {
     ROI_reconstruction <- unlist(list(weighted_POIs_at_iter[[4]]))

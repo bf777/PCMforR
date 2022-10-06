@@ -19,9 +19,10 @@
 #' - `cross_val`: Cross-validation - iteratively train a model on one sample and test it on a held-out sample.
 #' @param holdout (default = 2) If `analysis_type` is `cross_val`, is an integer defining the number of values in your data to hold out on each iteration.
 #' @param num_iters (default = 1000) If `analysis_type` is `cross_val`, is an integer defining the number CV iterations to run.
+#' @param verbose (default = FALSE) If `TRUE`, output detailed information during computational runs.
 #' @returns a summary of PCM data indicating the POIs that best fit the data.
 #' @export
-run_PCM <- function(input_dir, output_dir, POI_file, analysis_type, holdout = 2, num_iters = 1000) {
+run_PCM <- function(input_dir, output_dir, POI_file, analysis_type, holdout = 2, num_iters = 1000, verbose = FALSE) {
   # 1. Read in data from each file in input path
   input_files <- list.files(input_dir, full.names = TRUE)
   ROI_files <- input_files[grepl('*_vert.csv', input_files)]
@@ -94,7 +95,7 @@ run_PCM <- function(input_dir, output_dir, POI_file, analysis_type, holdout = 2,
                                                         POI_names, POIs_list,
                                                         analysis_type, holdout,
                                                         output_dir, CV_log, IND_log,
-                                                        summary_df, iter)
+                                                        summary_df, iter, verbose)
       CV_log <- train_test_loop_output_at_iter[[2]]
       IND_log <- train_test_loop_output_at_iter[[3]]
       summary_df <- train_test_loop_output_at_iter[[5]]
