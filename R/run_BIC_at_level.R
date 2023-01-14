@@ -166,7 +166,7 @@ run_BIC_at_level <- function(train_data_orig, test_data, POIs_list, POI_names, P
             # Check which POIs were identified before the duplicate one
             equivalent_POI_name <- POI_names[vert_level_list[[vert_level_idx]]]
             equivalent_BIC_idx <- match(vert_level_list[[vert_level_idx]], BIC_paths[horiz_level_idx, ])
-            if (!is.na(equivalent_BIC_idx)) {
+            if (!is.na(all(equivalent_BIC_idx))) {
               POIs_at_horiz_level <- na.omit(unlist(BIC_paths[horiz_level_idx, 1:equivalent_BIC_idx - 1]))
               POIs_to_use <- POI_names[POIs_at_horiz_level]
             }
@@ -198,8 +198,7 @@ run_BIC_at_level <- function(train_data_orig, test_data, POIs_list, POI_names, P
                   # Check which POIs were identified before the duplicate one
                   equivalent_POI_name <- POI_names[vert_level_list[[vert_level_idx]]]
                   equivalent_BIC_idx <- match(vert_level_list[[vert_level_idx]], BIC_paths[horiz_level_idx, ])
-                  print(equivalent_BIC_idx)
-                  if (!is.na(equivalent_BIC_idx)) {
+                  if (!is.na(all(equivalent_BIC_idx))) {
                     POIs_at_horiz_level <- na.omit(unlist(BIC_paths[horiz_level_idx, 1:equivalent_BIC_idx - 1]))
                     POIs_to_use <- POI_names[POIs_at_horiz_level]
                   }
